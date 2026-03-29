@@ -4,3 +4,7 @@
 [submodule "third_party/imgui"]
 	path = third_party/imgui
 	url = https://github.com/ocornut/imgui.git
+	branch = docking
+[submodule "third_party/zydis/dependencies/zycore"]
+	path = third_party/zydis/dependencies/zycore
+	url = https://github.com/zyantific/zycore-c

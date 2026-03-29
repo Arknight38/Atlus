@@ -1,0 +1,24 @@
+# Visual Studio / MSBuild (under vs/)
+vs/out/
+vs/.vs/
+vs/**/*.user
+
+*.user
+*.userosscache
+*.suo
+*.VC.db
+*.VC.VC.opendb
+
+# vcpkg manifest output (next to vs/vcpkg.json)
+vs/vcpkg_installed/
+
+# Legacy paths / local junk
+out/
+vcpkg_installed/
+build/
+build-*/
+cmake-build-*/
+.cache/
+compile_commands.json
+_deps/
+.vs/

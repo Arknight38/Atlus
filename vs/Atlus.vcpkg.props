@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <AtlusVcpkgInstalled>$(MSBuildThisFileDirectory)vcpkg_installed\x64-windows</AtlusVcpkgInstalled>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup Condition="'$(AtlusVcpkgHeaders)' == 'true'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(AtlusVcpkgInstalled)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LIEF_IMPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(AtlusVcpkgLink)' == 'true' and '$(Configuration)' == 'Debug'">
+    <Link>
+      <AdditionalLibraryDirectories>$(AtlusVcpkgInstalled)\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LIEF.lib;fmtd.lib;spdlogd.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;everest.lib;p256m.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(AtlusVcpkgLink)' == 'true' and '$(Configuration)' == 'Release'">
+    <Link>
+      <AdditionalLibraryDirectories>$(AtlusVcpkgInstalled)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LIEF.lib;fmt.lib;spdlog.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;everest.lib;p256m.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <Target Name="AtlusCopyVcpkgDllsDebug" AfterTargets="PostBuildEvent" Condition="'$(AtlusVcpkgLink)' == 'true' and '$(Configuration)' == 'Debug'">
+    <Copy SourceFiles="$(AtlusVcpkgInstalled)\debug\bin\LIEF.dll;$(AtlusVcpkgInstalled)\debug\bin\fmtd.dll;$(AtlusVcpkgInstalled)\debug\bin\spdlogd.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="AtlusCopyVcpkgDllsRelease" AfterTargets="PostBuildEvent" Condition="'$(AtlusVcpkgLink)' == 'true' and '$(Configuration)' == 'Release'">
+    <Copy SourceFiles="$(AtlusVcpkgInstalled)\bin\LIEF.dll;$(AtlusVcpkgInstalled)\bin\fmt.dll;$(AtlusVcpkgInstalled)\bin\spdlog.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
