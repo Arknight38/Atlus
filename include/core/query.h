@@ -1,6 +1,7 @@
 #pragma once
 #include "core/ir.h"
 #include "core/index.h"
+#include "core/address_space.h"
 #include <vector>
 #include <functional>
 #include <optional>

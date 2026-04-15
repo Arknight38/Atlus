@@ -67,6 +67,9 @@ struct SearchResult {
     
     std::string display_text;
     ir::Address address;
+    
+    // Explicit constructor required due to union with non-trivial members
+    SearchResult() : id{ir::SymbolId()} {}
 };
 
 // ─= Index Interface ───────────────────────────────────────────────────────────

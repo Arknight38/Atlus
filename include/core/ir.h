@@ -285,6 +285,9 @@ struct Function {
     enum class Type { Standard, Thunk, Imported, Exported };
     Type type = Type::Standard;
     
+    // Identity for provenance tracking
+    IRNodeIdentity identity;
+    
     bool has_name() const;
     std::string get_display_name() const;
 };
