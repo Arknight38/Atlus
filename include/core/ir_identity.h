@@ -6,11 +6,6 @@
 
 namespace atlus::ir {
 
-// Forward declarations from ir.h
-struct FunctionId;
-struct BasicBlockId;
-struct InstructionId;
-
 // ── IR Identity System ─────────────────────────────────────────────────────────
 
 /**

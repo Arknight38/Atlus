@@ -1,4 +1,5 @@
 #pragma once
+#include "core/ir_identity.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -51,6 +52,8 @@ struct BinaryId {
     explicit BinaryId(uint32_t v) : value(v) {}
     bool operator==(const BinaryId& other) const { return value == other.value; }
     bool operator!=(const BinaryId& other) const { return value != other.value; }
+    bool operator==(uint32_t v) const { return value == v; }
+    bool operator!=(uint32_t v) const { return value != v; }
     bool operator<(const BinaryId& other) const { return value < other.value; }
     explicit operator uint32_t() const { return value; }
     explicit operator bool() const { return value != Invalid; }
@@ -64,6 +67,8 @@ struct SectionId {
     explicit SectionId(uint32_t v) : value(v) {}
     bool operator==(const SectionId& other) const { return value == other.value; }
     bool operator!=(const SectionId& other) const { return value != other.value; }
+    bool operator==(uint32_t v) const { return value == v; }
+    bool operator!=(uint32_t v) const { return value != v; }
     bool operator<(const SectionId& other) const { return value < other.value; }
     explicit operator uint32_t() const { return value; }
     explicit operator bool() const { return value != Invalid; }
@@ -77,6 +82,8 @@ struct SymbolId {
     explicit SymbolId(uint32_t v) : value(v) {}
     bool operator==(const SymbolId& other) const { return value == other.value; }
     bool operator!=(const SymbolId& other) const { return value != other.value; }
+    bool operator==(uint32_t v) const { return value == v; }
+    bool operator!=(uint32_t v) const { return value != v; }
     bool operator<(const SymbolId& other) const { return value < other.value; }
     explicit operator uint32_t() const { return value; }
     explicit operator bool() const { return value != Invalid; }
@@ -90,6 +97,8 @@ struct FunctionId {
     explicit FunctionId(uint32_t v) : value(v) {}
     bool operator==(const FunctionId& other) const { return value == other.value; }
     bool operator!=(const FunctionId& other) const { return value != other.value; }
+    bool operator==(uint32_t v) const { return value == v; }
+    bool operator!=(uint32_t v) const { return value != v; }
     bool operator<(const FunctionId& other) const { return value < other.value; }
     explicit operator uint32_t() const { return value; }
     explicit operator bool() const { return value != Invalid; }
@@ -103,6 +112,8 @@ struct BasicBlockId {
     explicit BasicBlockId(uint32_t v) : value(v) {}
     bool operator==(const BasicBlockId& other) const { return value == other.value; }
     bool operator!=(const BasicBlockId& other) const { return value != other.value; }
+    bool operator==(uint32_t v) const { return value == v; }
+    bool operator!=(uint32_t v) const { return value != v; }
     bool operator<(const BasicBlockId& other) const { return value < other.value; }
     explicit operator uint32_t() const { return value; }
     explicit operator bool() const { return value != Invalid; }
@@ -116,6 +127,8 @@ struct InstructionId {
     explicit InstructionId(uint32_t v) : value(v) {}
     bool operator==(const InstructionId& other) const { return value == other.value; }
     bool operator!=(const InstructionId& other) const { return value != other.value; }
+    bool operator==(uint32_t v) const { return value == v; }
+    bool operator!=(uint32_t v) const { return value != v; }
     bool operator<(const InstructionId& other) const { return value < other.value; }
     explicit operator uint32_t() const { return value; }
     explicit operator bool() const { return value != Invalid; }
@@ -129,6 +142,8 @@ struct TypeId {
     explicit TypeId(uint32_t v) : value(v) {}
     bool operator==(const TypeId& other) const { return value == other.value; }
     bool operator!=(const TypeId& other) const { return value != other.value; }
+    bool operator==(uint32_t v) const { return value == v; }
+    bool operator!=(uint32_t v) const { return value != v; }
     bool operator<(const TypeId& other) const { return value < other.value; }
     explicit operator uint32_t() const { return value; }
     explicit operator bool() const { return value != Invalid; }
@@ -336,6 +351,9 @@ struct Symbol {
     
     // For imports: which DLL
     std::string source_dll;
+    
+    // Identity for provenance tracking
+    IRNodeIdentity identity;
 };
 
 /**

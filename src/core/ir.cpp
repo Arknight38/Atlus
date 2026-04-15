@@ -51,26 +51,26 @@ const TypeInfo* Binary::get_type(TypeId id) const {
 
 // Lookup by address
 const Section* Binary::find_section_at(Address addr) const {
-    auto it = section_by_rva_.find(addr.value);
+    auto it = section_by_rva_.find(addr.offset);
     if (it == section_by_rva_.end()) return nullptr;
     return get_section(it->second);
 }
 
 const Function* Binary::find_function_at(Address addr) const {
-    auto it = function_by_va_.find(addr.value);
+    auto it = function_by_va_.find(addr.offset);
     if (it == function_by_va_.end()) return nullptr;
     return get_function(it->second);
 }
 
 const Symbol* Binary::find_symbol_at(Address addr) const {
-    auto it = symbol_by_va_.find(addr.value);
+    auto it = symbol_by_va_.find(addr.offset);
     if (it == symbol_by_va_.end()) return nullptr;
     return get_symbol(it->second);
 }
 
 std::vector<const XRef*> Binary::find_xrefs_to(Address addr) const {
     std::vector<const XRef*> result;
-    auto it = xrefs_to_.find(addr.value);
+    auto it = xrefs_to_.find(addr.offset);
     if (it != xrefs_to_.end()) {
         for (const auto& xref : it->second) {
             result.push_back(const_cast<XRef*>(&xref));
@@ -81,7 +81,7 @@ std::vector<const XRef*> Binary::find_xrefs_to(Address addr) const {
 
 std::vector<const XRef*> Binary::find_xrefs_from(Address addr) const {
     std::vector<const XRef*> result;
-    auto it = xrefs_from_.find(addr.value);
+    auto it = xrefs_from_.find(addr.offset);
     if (it != xrefs_from_.end()) {
         for (const auto& xref : it->second) {
             result.push_back(const_cast<XRef*>(&xref));
