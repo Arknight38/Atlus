@@ -82,38 +82,12 @@ bool XRefFilter::matches(const ir::Binary& binary, const ir::XRef& xref) const {
     return false;
 }
 
-// QueryBuilder implementation
+// QueryBuilder implementation - using where() methods defined in header
+
 QueryBuilder& QueryBuilder::with_address_range(ir::Address start, ir::Address end) {
     AddressFilter f;
     f.range = ir::AddressRange{ir::QualifiedAddress(start), ir::QualifiedAddress(end)};
-    filters_.push_back(f);
-    return *this;
-}
-
-QueryBuilder& QueryBuilder::with_name_pattern(const std::string& pattern) {
-    SymbolFilter f;
-    f.name_pattern = pattern;
-    filters_.push_back(f);
-    return *this;
-}
-
-QueryBuilder& QueryBuilder::with_symbol_types(bool imports, bool exports, bool strings) {
-    SymbolFilter f;
-    f.include_imports = imports;
-    f.include_exports = exports;
-    f.include_strings = strings;
-    filters_.push_back(f);
-    return *this;
-}
-
-QueryBuilder& QueryBuilder::with_function_filter(const FunctionFilter& filter) {
-    filters_.push_back(filter);
-    return *this;
-}
-
-QueryBuilder& QueryBuilder::with_xref_filter(const XRefFilter& filter) {
-    xref_filter_ = filter;
-    return *this;
+    return where(f);
 }
 
 QueryBuilder& QueryBuilder::limit(size_t max_results) {
