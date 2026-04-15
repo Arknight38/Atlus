@@ -32,20 +32,20 @@ public:
     
     // Apply a single byte patch
     PatchResult patch_bytes(ir::Binary& binary,
-                           ir::BinaryFile& file,
+                           BinaryFile& file,
                            uint64_t address,
                            const std::vector<uint8_t>& new_bytes,
                            const std::string& description = "");
     
     // Insert NOP sled at location
     PatchResult insert_nop(ir::Binary& binary,
-                          ir::BinaryFile& file,
+                          BinaryFile& file,
                           uint64_t address,
                           size_t length);
     
     // Find code caves (sequences of null bytes in executable sections)
     std::vector<std::pair<uint64_t, size_t>> find_code_caves(
-        const ir::BinaryFile& file,
+        const BinaryFile& file,
         const ir::Binary& binary,
         size_t min_size = 16
     );
@@ -53,17 +53,17 @@ public:
     // Create a jump hook (redirect execution)
     PatchResult create_jump_hook(
         ir::Binary& binary,
-        ir::BinaryFile& file,
+        BinaryFile& file,
         uint64_t target_address,
         uint64_t hook_address,
         bool preserve_original = true
     );
     
     // Undo last patch
-    bool undo_last(ir::Binary& binary, ir::BinaryFile& file);
+    bool undo_last(ir::Binary& binary, BinaryFile& file);
     
     // Undo all patches
-    bool undo_all(ir::Binary& binary, ir::BinaryFile& file);
+    bool undo_all(ir::Binary& binary, BinaryFile& file);
     
     // Get patch history
     const std::vector<PatchOperation>& get_history() const { return history_; }
@@ -72,13 +72,13 @@ private:
     std::vector<PatchOperation> history_;
     std::stack<PatchOperation> undo_stack_;
     
-    bool apply_to_file(ir::BinaryFile& file, const PatchOperation& op);
-    bool restore_from_file(ir::BinaryFile& file, const PatchOperation& op);
+    bool apply_to_file(BinaryFile& file, const PatchOperation& op);
+    bool restore_from_file(BinaryFile& file, const PatchOperation& op);
 };
 
 PatchEngine::PatchResult PatchEngine::patch_bytes(
     ir::Binary& binary,
-    ir::BinaryFile& file,
+    BinaryFile& file,
     uint64_t address,
     const std::vector<uint8_t>& new_bytes,
     const std::string& description
@@ -124,7 +124,7 @@ PatchEngine::PatchResult PatchEngine::patch_bytes(
 
 PatchEngine::PatchResult PatchEngine::insert_nop(
     ir::Binary& binary,
-    ir::BinaryFile& file,
+    BinaryFile& file,
     uint64_t address,
     size_t length
 ) {
@@ -134,7 +134,7 @@ PatchEngine::PatchResult PatchEngine::insert_nop(
 }
 
 std::vector<std::pair<uint64_t, size_t>> PatchEngine::find_code_caves(
-    const ir::BinaryFile& file,
+    const BinaryFile& file,
     const ir::Binary& binary,
     size_t min_size
 ) {
@@ -186,7 +186,7 @@ std::vector<std::pair<uint64_t, size_t>> PatchEngine::find_code_caves(
 
 PatchEngine::PatchResult PatchEngine::create_jump_hook(
     ir::Binary& binary,
-    ir::BinaryFile& file,
+    BinaryFile& file,
     uint64_t target_address,
     uint64_t hook_address,
     bool preserve_original
@@ -223,7 +223,7 @@ PatchEngine::PatchResult PatchEngine::create_jump_hook(
     return patch_bytes(binary, file, target_address, jump_insn, "Jump hook");
 }
 
-bool PatchEngine::undo_last(ir::Binary& binary, ir::BinaryFile& file) {
+bool PatchEngine::undo_last(ir::Binary& binary, BinaryFile& file) {
     if (history_.empty()) return false;
     
     PatchOperation op = history_.back();
@@ -237,7 +237,7 @@ bool PatchEngine::undo_last(ir::Binary& binary, ir::BinaryFile& file) {
     return success;
 }
 
-bool PatchEngine::undo_all(ir::Binary& binary, ir::BinaryFile& file) {
+bool PatchEngine::undo_all(ir::Binary& binary, BinaryFile& file) {
     bool all_success = true;
     
     while (!history_.empty()) {
@@ -249,7 +249,7 @@ bool PatchEngine::undo_all(ir::Binary& binary, ir::BinaryFile& file) {
     return all_success;
 }
 
-bool PatchEngine::apply_to_file(ir::BinaryFile& file, const PatchOperation& op) {
+bool PatchEngine::apply_to_file(BinaryFile& file, const PatchOperation& op) {
     auto file_addr = file.data.data();  // Simplified - should use proper translation
     
     // This is a simplified version - in reality we'd use proper address translation
@@ -258,7 +258,7 @@ bool PatchEngine::apply_to_file(ir::BinaryFile& file, const PatchOperation& op) 
     return true;
 }
 
-bool PatchEngine::restore_from_file(ir::BinaryFile& file, const PatchOperation& op) {
+bool PatchEngine::restore_from_file(BinaryFile& file, const PatchOperation& op) {
     // Restore original bytes
     // Simplified - see apply_to_file
     
@@ -302,8 +302,8 @@ namespace export_format {
     
     // BPS patch format (binary patch space)
     std::vector<uint8_t> create_bps(const std::vector<PatchOperation>& patches,
-                                    const ir::BinaryFile& original,
-                                    const ir::BinaryFile& modified) {
+                                    const BinaryFile& original,
+                                    const BinaryFile& modified) {
         // BPS is more complex - requires diffing entire files
         // This is a placeholder
         return {};

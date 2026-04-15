@@ -248,7 +248,7 @@ public:
         for (const auto& block : relocs) {
             for (const auto& [offset, type] : block.entries) {
                 ir::RelocationEntry entry;
-                entry.location = {(block.page_rva + offset), ir::Address::Space::RVA};
+                entry.location = ir::QualifiedAddress((block.page_rva + offset), ir::AddressSpace::RVA, ir::SectionId());
                 entry.type = static_cast<ir::RelocationType>(type);
                 
                 table.entries.push_back(entry);
