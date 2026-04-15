@@ -43,15 +43,15 @@ uint64_t AddressRange::size() const {
 
 AddressRange AddressRange::from_section(const Section& section) {
     AddressRange range;
-    range.start = section.virtual_addr;
-    range.end = QualifiedAddress::image(section.virtual_addr.offset + section.virtual_size);
+    range.start = QualifiedAddress(section.virtual_addr);
+    range.end = QualifiedAddress(section.virtual_addr.offset + section.virtual_size, AddressSpace::Image, SectionId());
     return range;
 }
 
 AddressRange AddressRange::from_function(const Function& fn, const Binary& binary) {
     AddressRange range;
-    range.start = fn.start_address;
-    range.end = fn.end_address;
+    range.start = QualifiedAddress(fn.start_address);
+    range.end = QualifiedAddress(fn.end_address);
     return range;
 }
 
@@ -123,21 +123,22 @@ std::optional<QualifiedAddress> AddressTranslation::translate(
     // Convert RVA to target space
     switch (to_space) {
         case AddressSpace::RVA:
-            return QualifiedAddress::rva(rva.value());
+            return QualifiedAddress(rva.value(), AddressSpace::RVA, SectionId());
         case AddressSpace::Image:
-            return QualifiedAddress::image(preferred_base_ + rva.value());
+            return QualifiedAddress(preferred_base_ + rva.value(), AddressSpace::Image, SectionId());
         case AddressSpace::Runtime:
-            return QualifiedAddress::runtime(runtime_base_ + rva.value());
+            return QualifiedAddress(runtime_base_ + rva.value(), AddressSpace::Runtime, SectionId());
         case AddressSpace::File:
             return file_to_image(rva.value()).has_value() 
-                ? std::optional(QualifiedAddress::file(rva_to_file(rva.value()).value()))
+                ? std::optional(QualifiedAddress(rva_to_file(rva.value()).value(), AddressSpace::File, SectionId()))
                 : std::nullopt;
         case AddressSpace::Section: {
-            auto section = find_section_containing(QualifiedAddress::rva(rva.value()));
-            if (!section.has_value()) return std::nullopt;
+            auto sec_id = find_section_containing(QualifiedAddress(rva.value(), AddressSpace::RVA, SectionId()));
+            if (!sec_id.has_value()) return std::nullopt;
             for (const auto& sec : sections_) {
-                if (sec.id == static_cast<uint32_t>(section.value())) {
-                    return QualifiedAddress::section(rva.value() - sec.rva, section.value());
+                if (sec.id == static_cast<uint32_t>(sec_id.value())) {
+                    uint64_t offset = rva.value() - sec.rva.offset;
+                    return QualifiedAddress(offset, AddressSpace::Section, sec_id.value());
                 }
             }
             return std::nullopt;

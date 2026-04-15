@@ -46,6 +46,10 @@ struct QualifiedAddress {
     QualifiedAddress(uint64_t off, AddressSpace sp, SectionId sec) 
         : offset(off), space(sp), section(sec) {}
     
+    // Convert from legacy Address
+    explicit QualifiedAddress(const Address& addr, SectionId sec = SectionId())
+        : offset(addr.offset), space(static_cast<AddressSpace>(addr.space)), section(sec) {}
+    
     bool valid() const { return space != AddressSpace::None; }
     
     // Factory functions temporarily removed
@@ -222,10 +226,10 @@ struct RelocationTable {
     
     // Apply all relocations for a given base address
     void apply_relocations(uint8_t* image_data, const BaseAddressModel& base) const;
-    
-    // Find relocations affecting an address range
-    std::vector<RelocationEntry> find_in_range(AddressRange range) const;
 };
+
+// Forward declaration (defined later)
+struct AddressRange;
 
 // ── Address Translation ─────────────────────────────────────────────────────────
 
