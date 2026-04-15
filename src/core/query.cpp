@@ -58,23 +58,19 @@ bool FunctionFilter::matches(const ir::Binary& binary, ir::FunctionId fn) const 
     const ir::Function* func = binary.get_function(fn);
     if (!func) return false;
     
-    if (has_name.has_value()) {
-        bool fn_has_name = func->has_name();
-        if (fn_has_name != has_name.value()) return false;
+    if (name_pattern && func->get_display_name().find(*name_pattern) == std::string::npos) {
+        return false;
     }
     
-    if (is_imported.has_value()) {
-        bool fn_is_import = func->type == ir::Function::Type::Imported;
-        if (fn_is_import != is_imported.value()) return false;
-    }
+    if (type && func->type != *type) return false;
     
-    if (is_exported.has_value()) {
-        bool fn_is_export = func->type == ir::Function::Type::Exported;
-        if (fn_is_export != is_exported.value()) return false;
-    }
+    if (min_size && func->size_bytes < *min_size) return false;
+    if (max_size && func->size_bytes > *max_size) return false;
     
-    if (min_size.has_value() && func->size_bytes < min_size.value()) return false;
-    if (max_size.has_value() && func->size_bytes > max_size.value()) return false;
+    if (has_xrefs_in && func->calls_in.empty() != !*has_xrefs_in) return false;
+    if (has_xrefs_out && func->calls_out.empty() != !*has_xrefs_out) return false;
+    
+    if (is_leaf_function && (func->calls_out.empty() != *is_leaf_function)) return false;
     
     return true;
 }

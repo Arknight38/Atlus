@@ -114,6 +114,7 @@ struct FunctionFilter {
     std::optional<bool> is_leaf_function;  // No calls out
     
     bool matches(const ir::Function& fn, const ir::Binary& binary) const;
+    bool matches(const ir::Binary& binary, ir::FunctionId fn) const;
 };
 
 /**
