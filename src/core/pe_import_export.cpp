@@ -1,5 +1,6 @@
 #include "core/ir.h"
 #include "core/pe_parser.h"
+#include "core/address_space.h"
 #include <unordered_map>
 
 // Forward declaration for LIEF PE Binary (stub for compilation)
