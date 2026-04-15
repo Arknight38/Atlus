@@ -2,6 +2,9 @@
 #include "core/pe_parser.h"
 #include <unordered_map>
 
+// Forward declaration for LIEF PE Binary (stub for compilation)
+struct LIEF_PE_Binary;
+
 namespace atlus::pe {
 
 // Import table reconstruction

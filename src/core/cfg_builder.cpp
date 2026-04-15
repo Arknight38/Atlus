@@ -89,7 +89,7 @@ private:
         // Find next block in address order
         uint64_t current_end = bb->end_address.offset;
         
-        ir::BasicBlockId next_bb = ir::BasicBlockId::Invalid;
+        ir::BasicBlockId next_bb(ir::BasicBlockId::Invalid);
         uint64_t next_addr = UINT64_MAX;
         
         for (ir::BasicBlockId other_id : fn.basic_blocks) {
@@ -352,7 +352,7 @@ ir::BasicBlockId get_immediate_dominator(
     auto tree = analysis.compute(fn, binary);
     
     auto it = tree.immediate_dominator.find(block);
-    if (it == tree.immediate_dominator.end()) return ir::BasicBlockId::Invalid;
+    if (it == tree.immediate_dominator.end()) return ir::BasicBlockId(ir::BasicBlockId::Invalid);
     return it->second;
 }
 

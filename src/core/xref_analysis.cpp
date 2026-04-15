@@ -108,7 +108,7 @@ public:
         size_t length;
     };
     
-    std::vector<StringMatch> find_strings(const ir::BinaryFile& file, 
+    std::vector<StringMatch> find_strings(const BinaryFile& file, 
                                           const ir::Binary& binary,
                                           size_t min_length = 4) {
         std::vector<StringMatch> results;
@@ -211,7 +211,7 @@ public:
     std::optional<SwitchTable> recover(
         ir::InstructionId jmp_insn_id,
         const ir::Binary& binary,
-        const ir::BinaryFile& file
+        const BinaryFile& file
     ) {
         const ir::Instruction* insn = binary.get_instruction(jmp_insn_id);
         if (!insn || insn->mnemonic != "jmp") return std::nullopt;
@@ -243,7 +243,7 @@ public:
     
 private:
     void scan_table_entries(SwitchTable& table, const ir::Binary& binary,
-                           const ir::BinaryFile& file) {
+                           const BinaryFile& file) {
         // Read entries from file
         auto file_addr = binary.virtual_to_file({table.base_address, ir::Address::Space::Virtual});
         if (!file_addr.has_value()) return;
@@ -288,7 +288,7 @@ void analyze_all_xrefs(ir::Binary& binary) {
     analyzer.analyze_data_refs(binary);
 }
 
-std::vector<std::string> find_strings(const ir::BinaryFile& file,
+std::vector<std::string> find_strings(const BinaryFile& file,
                                       const ir::Binary& binary,
                                       size_t min_length) {
     StringFinder finder;
@@ -302,7 +302,7 @@ std::vector<std::string> find_strings(const ir::BinaryFile& file,
     return results;
 }
 
-void register_string_symbols(const ir::BinaryFile& file,
+void register_string_symbols(const BinaryFile& file,
                              ir::Binary& binary,
                              size_t min_length) {
     StringFinder finder;
