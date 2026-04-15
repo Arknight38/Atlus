@@ -84,7 +84,8 @@ bool XRefFilter::matches(const ir::Binary& binary, const ir::XRef& xref) const {
 
 // QueryBuilder implementation
 QueryBuilder& QueryBuilder::with_address_range(ir::Address start, ir::Address end) {
-    AddressFilter f{start, end};
+    AddressFilter f;
+    f.range = ir::AddressRange{ir::QualifiedAddress(start), ir::QualifiedAddress(end)};
     filters_.push_back(f);
     return *this;
 }

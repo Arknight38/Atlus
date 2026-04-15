@@ -127,7 +127,12 @@ struct XRefFilter {
     std::optional<ir::FunctionId> from_function;
     std::optional<ir::FunctionId> to_function;
     
+    bool include_calls = true;
+    bool include_jumps = true;
+    bool include_data = true;
+    
     bool matches(const ir::XRef& xref) const;
+    bool matches(const ir::Binary& binary, const ir::XRef& xref) const;
 };
 
 // ── Query Builders ─────────────────────────────────────────────────────────────
@@ -160,6 +165,7 @@ public:
     QueryBuilder& in_function(ir::FunctionId fn);
     
     // Navigation
+    QueryBuilder& with_address_range(ir::Address start, ir::Address end);
     QueryBuilder& within_range(ir::AddressRange range);
     QueryBuilder& in_section(ir::SectionId section);
     
