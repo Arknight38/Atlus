@@ -98,6 +98,7 @@ struct SymbolFilter {
     bool include_discovered = true;
     
     bool matches(const ir::Symbol& sym) const;
+    bool matches(const ir::Binary& binary, ir::SymbolId sym) const;
 };
 
 /**

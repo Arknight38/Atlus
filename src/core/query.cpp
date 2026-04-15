@@ -29,24 +29,28 @@ bool SymbolFilter::matches(const ir::Binary& binary, ir::SymbolId sym) const {
     const ir::Symbol* symbol = binary.get_symbol(sym);
     if (!symbol) return false;
     
-    if (!name_pattern.empty()) {
-        if (symbol->name.find(name_pattern) == std::string::npos &&
-            symbol->demangled_name.find(name_pattern) == std::string::npos) {
+    if (name_pattern && !name_pattern->empty()) {
+        if (symbol->name.find(*name_pattern) == std::string::npos &&
+            symbol->demangled_name.find(*name_pattern) == std::string::npos) {
             return false;
         }
     }
     
-    if (include_imports && symbol->type == ir::Symbol::Type::Import) return true;
-    if (include_exports && symbol->type == ir::Symbol::Type::Export) return true;
-    if (include_strings && symbol->type == ir::Symbol::Type::String) return true;
-    if (include_functions && symbol->type == ir::Symbol::Type::Function) return true;
-    
-    // If no type flags specified, match all
-    if (!include_imports && !include_exports && !include_strings && !include_functions) {
-        return true;
+    if (dll_name) {
+        if (symbol->source_dll.find(*dll_name) == std::string::npos) {
+            return false;
+        }
     }
     
-    return false;
+    if (type && symbol->type != *type) {
+        return false;
+    }
+    
+    // Check type filters
+    if (symbol->type == ir::Symbol::Type::Import && !include_imports) return false;
+    if (symbol->type == ir::Symbol::Type::Export && !include_exports) return false;
+    
+    return true;
 }
 
 bool FunctionFilter::matches(const ir::Binary& binary, ir::FunctionId fn) const {
