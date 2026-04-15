@@ -172,7 +172,7 @@ ContentHash TypeInfoGovernance::compute_identity(const TypeInfo& type) {
 TypeId TypeInfoGovernance::create_forward_declaration(const std::string& name) {
     // This is a factory method that would be called by Binary::create_type
     // The actual ID assignment happens in Binary
-    return TypeId::Invalid; // Placeholder - real implementation in Binary
+    return TypeId(TypeId::Invalid); // Placeholder - real implementation in Binary
 }
 
 bool TypeInfoGovernance::resolve_forward_declaration(TypeId id, const TypeInfo& definition) {

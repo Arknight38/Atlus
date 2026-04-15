@@ -137,7 +137,7 @@ std::optional<QualifiedAddress> AddressTranslation::translate(
             if (!sec_id.has_value()) return std::nullopt;
             for (const auto& sec : sections_) {
                 if (sec.id == static_cast<uint32_t>(sec_id.value())) {
-                    uint64_t offset = rva.value() - sec.rva.offset;
+                    uint64_t offset = rva.value() - sec.rva;
                     return QualifiedAddress(offset, AddressSpace::Section, sec_id.value());
                 }
             }

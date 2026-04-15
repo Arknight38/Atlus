@@ -67,7 +67,7 @@ struct TypeConstraint {
     
     Kind kind = Kind::None;
     BaseType base = BaseType::Unknown;
-    TypeId pointee = TypeId::Invalid;  // For PointerTo
+    TypeId pointee{TypeId::Invalid};  // For PointerTo
     // For SameAs: use type variable binding (see TypeEnvironment)
 };
 
@@ -97,7 +97,7 @@ struct TypeVariable {
     
     // Location info for debugging
     std::string name;           // e.g., "rax", "[rbp-8]"
-    InstructionId def_site = InstructionId::Invalid;  // Where defined
+    InstructionId def_site{InstructionId::Invalid};  // Where defined
 };
 
 // ── Register Type State ─────────────────────────────────────────────────────────

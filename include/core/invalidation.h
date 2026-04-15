@@ -1,6 +1,7 @@
 #pragma once
 #include "core/ir.h"
 #include "core/ir_identity.h"
+#include "core/address_space.h"
 #include <functional>
 #include <vector>
 #include <unordered_set>
@@ -42,7 +43,7 @@ enum class InvalidationTrigger {
  */
 struct InvalidationRule {
     InvalidationTrigger trigger;
-    DependencyMask affected_stages;
+    ir::DependencyMask affected_stages;
     bool cascade_to_dependents = true;
     bool requires_full_reanalysis = false;
     
@@ -163,7 +164,7 @@ private:
  */
 struct IncrementalState {
     // Stages that need re-run (from pipeline)
-    std::unordered_set<AnalysisStageDependency> dirty_stages;
+    std::unordered_set<ir::AnalysisStageDependency> dirty_stages;
     
     // Specific entities needing attention (for targeted re-analysis)
     std::unordered_set<ir::FunctionId> dirty_functions;
@@ -180,7 +181,7 @@ struct IncrementalState {
     
     // Check if anything is dirty
     bool is_dirty() const {
-        return !dirty_stages.is_empty() || 
+        return !dirty_stages.empty() || 
                !dirty_functions.empty() || 
                !patched_regions.empty();
     }
@@ -192,10 +193,10 @@ struct IncrementalState {
  * Find which IR nodes contain a given address.
  */
 struct NodeResolution {
-    ir::SectionId section = ir::SectionId::Invalid;
-    ir::FunctionId function = ir::FunctionId::Invalid;
-    ir::BasicBlockId block = ir::BasicBlockId::Invalid;
-    ir::InstructionId instruction = ir::InstructionId::Invalid;
+    ir::SectionId section{ir::SectionId::Invalid};
+    ir::FunctionId function{ir::FunctionId::Invalid};
+    ir::BasicBlockId block{ir::BasicBlockId::Invalid};
+    ir::InstructionId instruction{ir::InstructionId::Invalid};
 };
 
 NodeResolution resolve_address(

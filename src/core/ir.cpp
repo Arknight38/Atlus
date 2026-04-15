@@ -113,7 +113,7 @@ std::vector<const Function*> Binary::find_functions_by_name(const std::string& p
         if (sym->type == Symbol::Type::Function) {
             if (sym->name.find(pattern) != std::string::npos ||
                 sym->demangled_name.find(pattern) != std::string::npos) {
-                if (auto* fn = get_function(sym->type)) {
+                if (auto* fn = find_function_at(sym->address)) {
                     result.push_back(fn);
                 }
             }
