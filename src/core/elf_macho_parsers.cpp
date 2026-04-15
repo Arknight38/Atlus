@@ -1,5 +1,6 @@
 #include "core/ir.h"
 #include "core/error.h"
+#include "core/loader.h"
 
 namespace atlus::parsers {
 

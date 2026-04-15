@@ -169,7 +169,7 @@ public:
     }
     
 private:
-    std::string escape_json(const std::string& s) {
+    std::string escape_json(const std::string& s) const {
         std::string result;
         for (char c : s) {
             switch (c) {
