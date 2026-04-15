@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 namespace atlus::annotations {
 

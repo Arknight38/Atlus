@@ -98,7 +98,7 @@ public:
             // Create section for this segment
             ir::Section sec;
             sec.name = "LOAD" + std::to_string(i);
-            sec.file_offset = {phdr->p_offset, ir::Address::Space::File};
+            sec.file_offset = {phdr->p_offset, ir::Address::Space::FileOffset};
             sec.rva = {phdr->p_vaddr, ir::Address::Space::RVA};
             sec.virtual_addr = {phdr->p_vaddr, ir::Address::Space::Virtual};
             sec.virtual_size = static_cast<uint32_t>(phdr->p_memsz);
@@ -221,7 +221,7 @@ public:
                     sec.name.resize(null_pos);
                 }
                 
-                sec.file_offset = {seg->fileoff, ir::Address::Space::File};
+                sec.file_offset = {seg->fileoff, ir::Address::Space::FileOffset};
                 sec.rva = {seg->vmaddr - 0x100000000, ir::Address::Space::RVA};  // Adjust for base
                 sec.virtual_addr = {seg->vmaddr, ir::Address::Space::Virtual};
                 sec.virtual_size = static_cast<uint32_t>(seg->vmsize);
@@ -327,7 +327,7 @@ public:
         // Create single section for entire file
         ir::Section sec;
         sec.name = ".raw";
-        sec.file_offset = {0, ir::Address::Space::File};
+        sec.file_offset = {0, ir::Address::Space::FileOffset};
         sec.rva = {0, ir::Address::Space::RVA};
         sec.virtual_addr = {base_address, ir::Address::Space::Virtual};
         sec.virtual_size = static_cast<uint32_t>(file.size());
