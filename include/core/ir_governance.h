@@ -170,8 +170,8 @@ struct InstructionGovernance {
         size_t new_len
     ) {
         // Any byte change = new instruction
-        if (new_len != old_insn.bytes.size()) return true;
-        return memcmp(new_bytes, old_insn.bytes.data(), new_len) != 0;
+        if (new_len != old_insn.bytes.size) return true;
+        return memcmp(new_bytes, old_insn.bytes.data, new_len) != 0;
     }
 };
 
