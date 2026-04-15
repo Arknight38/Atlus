@@ -83,8 +83,8 @@
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
-    <AtlusVcpkgHeaders>true</AtlusVcpkgHeaders>
-    <AtlusVcpkgLink>true</AtlusVcpkgLink>
+    <AtlusVcpkgHeaders>false</AtlusVcpkgHeaders>
+    <AtlusVcpkgLink>false</AtlusVcpkgLink>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Atlus.vcpkg.props" />

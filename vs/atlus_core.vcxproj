@@ -124,7 +124,7 @@
     <ClCompile Include="../third_party/zydis/dependencies/zycore/src/API/Thread.c" />
   </ItemGroup>
   <PropertyGroup>
-    <AtlusVcpkgHeaders>true</AtlusVcpkgHeaders>
+    <AtlusVcpkgHeaders>false</AtlusVcpkgHeaders>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(MSBuildThisFileDirectory)Atlus.vcpkg.props" />
