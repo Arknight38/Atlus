@@ -69,6 +69,17 @@
     <ClCompile Include="..\src\core\analysis_pipeline.cpp" />
     <ClCompile Include="..\src\core\index.cpp" />
     <ClCompile Include="..\src\core\query.cpp" />
+    <!-- Phase 3: Analysis Depth -->
+    <ClCompile Include="..\src\core\cfg_builder.cpp" />
+    <ClCompile Include="..\src\core\xref_analysis.cpp" />
+    <ClCompile Include="..\src\core\pe_import_export.cpp" />
+    <ClCompile Include="..\src\core\patch_engine.cpp" />
+    <!-- Phase 4: Interoperability -->
+    <ClCompile Include="..\src\core\ida_integration.cpp" />
+    <!-- Phase 5: Extended Formats -->
+    <ClCompile Include="..\src\core\elf_macho_parsers.cpp" />
+    <!-- Optional Features -->
+    <ClCompile Include="..\src\core\bookmarks.cpp" />
     <!-- Zydis sources -->
     <ClCompile Include="../third_party/zydis/src/Decoder.c" />
     <ClCompile Include="../third_party/zydis/src/DecoderData.c" />
