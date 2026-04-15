@@ -57,11 +57,11 @@ struct QueryResult {
 
 template<>
 inline ir::FunctionId QueryResult::get_id<ir::FunctionId>() const {
-    return function;
+    return id.function;
 }
 template<>
 inline ir::SymbolId QueryResult::get_id<ir::SymbolId>() const {
-    return symbol;
+    return id.symbol;
 }
 
 // ── Query Filters ──────────────────────────────────────────────────────────────
@@ -80,6 +80,9 @@ struct AddressFilter {
         if (range && !range->contains(addr)) return false;
         return true;
     }
+    
+    bool matches(const ir::Binary& binary, ir::FunctionId fn) const;
+    bool matches(const ir::Binary& binary, ir::SymbolId sym) const;
 };
 
 /**

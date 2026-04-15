@@ -9,8 +9,8 @@ bool AddressFilter::matches(const ir::Binary& binary, ir::FunctionId fn) const {
     const ir::Function* func = binary.get_function(fn);
     if (!func) return false;
     
-    if (start.valid() && func->start_address.offset < start.offset) return false;
-    if (end.valid() && func->start_address.offset >= end.offset) return false;
+    if (range && range->start.valid() && func->start_address.offset < range->start.offset) return false;
+    if (range && range->end.valid() && func->start_address.offset >= range->end.offset) return false;
     return true;
 }
 
@@ -19,8 +19,8 @@ bool AddressFilter::matches(const ir::Binary& binary, ir::SymbolId sym) const {
     const ir::Symbol* symbol = binary.get_symbol(sym);
     if (!symbol) return false;
     
-    if (start.valid() && symbol->address.offset < start.offset) return false;
-    if (end.valid() && symbol->address.offset >= end.offset) return false;
+    if (range && range->start.valid() && symbol->address.offset < range->start.offset) return false;
+    if (range && range->end.valid() && symbol->address.offset >= range->end.offset) return false;
     return true;
 }
 
