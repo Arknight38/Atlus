@@ -309,7 +309,10 @@ private:
     const ir::Binary& binary_;
     const index::GlobalIndex* index_ = nullptr;
     
-    struct Cache;
+    struct Cache {
+        std::vector<QueryResult> last_results;
+        std::chrono::time_point<std::chrono::steady_clock> last_query_time;
+    };
     std::unique_ptr<Cache> cache_;
 };
 
