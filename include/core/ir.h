@@ -16,23 +16,23 @@ namespace atlus::ir {
  * All IR entities use this for consistent addressing across the analysis pipeline.
  */
 struct Address {
-    uint64_t value = 0;
+    uint64_t offset = 0;
     
     enum class Space { None, FileOffset, RVA, Virtual };
     Space space = Space::None;
     
     // Convenience constructors
-    static Address file_offset(uint64_t offset) { return {offset, Space::FileOffset}; }
-    static Address rva(uint64_t rva)           { return {rva, Space::RVA}; }
+    static Address file_offset(uint64_t off) { return {off, Space::FileOffset}; }
+    static Address rva(uint64_t r)           { return {r, Space::RVA}; }
     static Address virtual_addr(uint64_t va)   { return {va, Space::Virtual}; }
     
     bool valid() const { return space != Space::None; }
     
     bool operator==(const Address& other) const { 
-        return value == other.value && space == other.space; 
+        return offset == other.offset && space == other.space; 
     }
     bool operator<(const Address& other) const {
-        return value < other.value;
+        return offset < other.offset;
     }
 };
 

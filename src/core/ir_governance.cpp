@@ -1,4 +1,5 @@
 #include "core/ir_governance.h"
+#include "core/md5.h"
 #include <cstring>
 
 namespace atlus::ir {
@@ -26,7 +27,7 @@ ContentHash FunctionGovernance::compute_identity(
     }
     
     ContentHash hash;
-    md5_final(hash.bytes.data(), &ctx);
+    md5_final(hash.bytes, &ctx);
     return hash;
 }
 
@@ -47,7 +48,7 @@ ContentHash BasicBlockGovernance::compute_identity(
     }
     
     ContentHash hash;
-    md5_final(hash.bytes.data(), &ctx);
+    md5_final(hash.bytes, &ctx);
     return hash;
 }
 
@@ -106,7 +107,7 @@ ContentHash XRefGovernance::compute_identity(
     md5_update(&ctx, data, 24);
     
     ContentHash hash;
-    md5_final(hash.bytes.data(), &ctx);
+    md5_final(hash.bytes, &ctx);
     return hash;
 }
 

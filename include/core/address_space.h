@@ -1,6 +1,7 @@
 #pragma once
 #include "core/ir.h"
 #include "core/error.h"
+#include "core/loader.h"
 #include <optional>
 #include <vector>
 #include <string>
@@ -39,25 +40,15 @@ const char* address_space_name(AddressSpace space);
 struct QualifiedAddress {
     uint64_t offset = 0;
     AddressSpace space = AddressSpace::None;
-    SectionId section;  // Uses default ctor which sets to Invalid
+    SectionId section;
+    
+    QualifiedAddress() = default;
+    QualifiedAddress(uint64_t off, AddressSpace sp, SectionId sec) 
+        : offset(off), space(sp), section(sec) {}
     
     bool valid() const { return space != AddressSpace::None; }
     
-    static QualifiedAddress file(uint64_t off) {
-        return QualifiedAddress{off, AddressSpace::File, SectionId{}};
-    }
-    static QualifiedAddress section(uint64_t off, SectionId sec) {
-        return QualifiedAddress{off, AddressSpace::Section, sec};
-    }
-    static QualifiedAddress rva(uint64_t rva) {
-        return QualifiedAddress{rva, AddressSpace::RVA, SectionId{}};
-    }
-    static QualifiedAddress image(uint64_t va) {
-        return QualifiedAddress{va, AddressSpace::Image, SectionId{}};
-    }
-    static QualifiedAddress runtime(uint64_t va) {
-        return QualifiedAddress{va, AddressSpace::Runtime, SectionId{}};
-    }
+    // Factory functions temporarily removed
     
     bool operator==(const QualifiedAddress& other) const {
         return offset == other.offset && 

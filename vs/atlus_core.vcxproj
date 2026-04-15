@@ -60,6 +60,7 @@
     </ClCompile>
     <ClCompile Include="..\src\core\ghidra_decompiler.cpp" />
     <!-- IR Infrastructure -->
+    <ClCompile Include="..\src\core\md5.cpp" />
     <ClCompile Include="..\src\core\ir_identity.cpp" />
     <ClCompile Include="..\src\core\ir_governance.cpp" />
     <ClCompile Include="..\src\core\ir.cpp" />
