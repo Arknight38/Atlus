@@ -44,21 +44,109 @@ struct Address {
  */
 enum class EntityId : uint32_t { Invalid = 0xFFFFFFFF };
 
-#define DECLARE_ENTITY_ID(name) \
-    enum class name : uint32_t { Invalid = 0xFFFFFFFF }; \
-    inline bool is_valid(name id) { return static_cast<uint32_t>(id) != 0xFFFFFFFF; }
+struct BinaryId {
+    uint32_t value = 0xFFFFFFFF;
+    static constexpr uint32_t Invalid = 0xFFFFFFFF;
+    BinaryId() = default;
+    explicit BinaryId(uint32_t v) : value(v) {}
+    bool operator==(const BinaryId& other) const { return value == other.value; }
+    bool operator!=(const BinaryId& other) const { return value != other.value; }
+    bool operator<(const BinaryId& other) const { return value < other.value; }
+    explicit operator uint32_t() const { return value; }
+    explicit operator bool() const { return value != Invalid; }
+    bool is_valid() const { return value != Invalid; }
+};
 
-DECLARE_ENTITY_ID(BinaryId)
-DECLARE_ENTITY_ID(SectionId)
-DECLARE_ENTITY_ID(SymbolId)
-DECLARE_ENTITY_ID(FunctionId)
-DECLARE_ENTITY_ID(BasicBlockId)
-DECLARE_ENTITY_ID(InstructionId)
-DECLARE_ENTITY_ID(TypeId)
+struct SectionId {
+    uint32_t value = 0xFFFFFFFF;
+    static constexpr uint32_t Invalid = 0xFFFFFFFF;
+    SectionId() = default;
+    explicit SectionId(uint32_t v) : value(v) {}
+    bool operator==(const SectionId& other) const { return value == other.value; }
+    bool operator!=(const SectionId& other) const { return value != other.value; }
+    bool operator<(const SectionId& other) const { return value < other.value; }
+    explicit operator uint32_t() const { return value; }
+    explicit operator bool() const { return value != Invalid; }
+    bool is_valid() const { return value != Invalid; }
+};
 
-#undef DECLARE_ENTITY_ID
+struct SymbolId {
+    uint32_t value = 0xFFFFFFFF;
+    static constexpr uint32_t Invalid = 0xFFFFFFFF;
+    SymbolId() = default;
+    explicit SymbolId(uint32_t v) : value(v) {}
+    bool operator==(const SymbolId& other) const { return value == other.value; }
+    bool operator!=(const SymbolId& other) const { return value != other.value; }
+    bool operator<(const SymbolId& other) const { return value < other.value; }
+    explicit operator uint32_t() const { return value; }
+    explicit operator bool() const { return value != Invalid; }
+    bool is_valid() const { return value != Invalid; }
+};
+
+struct FunctionId {
+    uint32_t value = 0xFFFFFFFF;
+    static constexpr uint32_t Invalid = 0xFFFFFFFF;
+    FunctionId() = default;
+    explicit FunctionId(uint32_t v) : value(v) {}
+    bool operator==(const FunctionId& other) const { return value == other.value; }
+    bool operator!=(const FunctionId& other) const { return value != other.value; }
+    bool operator<(const FunctionId& other) const { return value < other.value; }
+    explicit operator uint32_t() const { return value; }
+    explicit operator bool() const { return value != Invalid; }
+    bool is_valid() const { return value != Invalid; }
+};
+
+struct BasicBlockId {
+    uint32_t value = 0xFFFFFFFF;
+    static constexpr uint32_t Invalid = 0xFFFFFFFF;
+    BasicBlockId() = default;
+    explicit BasicBlockId(uint32_t v) : value(v) {}
+    bool operator==(const BasicBlockId& other) const { return value == other.value; }
+    bool operator!=(const BasicBlockId& other) const { return value != other.value; }
+    bool operator<(const BasicBlockId& other) const { return value < other.value; }
+    explicit operator uint32_t() const { return value; }
+    explicit operator bool() const { return value != Invalid; }
+    bool is_valid() const { return value != Invalid; }
+};
+
+struct InstructionId {
+    uint32_t value = 0xFFFFFFFF;
+    static constexpr uint32_t Invalid = 0xFFFFFFFF;
+    InstructionId() = default;
+    explicit InstructionId(uint32_t v) : value(v) {}
+    bool operator==(const InstructionId& other) const { return value == other.value; }
+    bool operator!=(const InstructionId& other) const { return value != other.value; }
+    bool operator<(const InstructionId& other) const { return value < other.value; }
+    explicit operator uint32_t() const { return value; }
+    explicit operator bool() const { return value != Invalid; }
+    bool is_valid() const { return value != Invalid; }
+};
+
+struct TypeId {
+    uint32_t value = 0xFFFFFFFF;
+    static constexpr uint32_t Invalid = 0xFFFFFFFF;
+    TypeId() = default;
+    explicit TypeId(uint32_t v) : value(v) {}
+    bool operator==(const TypeId& other) const { return value == other.value; }
+    bool operator!=(const TypeId& other) const { return value != other.value; }
+    bool operator<(const TypeId& other) const { return value < other.value; }
+    explicit operator uint32_t() const { return value; }
+    explicit operator bool() const { return value != Invalid; }
+    bool is_valid() const { return value != Invalid; }
+};
 
 // ── Operand Types ──────────────────────────────────────────────────────────────
+
+/**
+ * Memory reference operand data.
+ * Used for instructions that reference memory (e.g., [rbx+rcx*4+0x10]).
+ */
+struct MemoryRef {
+    uint32_t base_reg = 0;
+    uint32_t index_reg = 0;
+    uint8_t  scale = 0;
+    int64_t  displacement = 0;
+};
 
 /**
  * Represents an instruction operand with type-safe access.
@@ -74,12 +162,7 @@ struct Operand {
         std::monostate,           // None
         uint32_t,                 // Register (ZydisRegister enum)
         uint64_t,                 // Immediate value
-        struct {                  // Memory reference
-            uint32_t base_reg;
-            uint32_t index_reg;
-            uint8_t  scale;
-            int64_t  displacement;
-        },
+        MemoryRef,                // Memory reference
         Address                   // Code/data address reference
     > data;
     
@@ -101,8 +184,8 @@ struct Operand {
  *   - instruction -> symbol (if this address has a name)
  */
 struct Instruction {
-    InstructionId id = InstructionId::Invalid;
-    BasicBlockId parent_bb = BasicBlockId::Invalid;
+    InstructionId id{InstructionId::Invalid};
+    BasicBlockId parent_bb{BasicBlockId::Invalid};
     
     // Addressing
     Address address;
@@ -136,8 +219,8 @@ struct Instruction {
  *   - basic_block -> predecessor_bbs[] (reverse CFG edges)
  */
 struct BasicBlock {
-    BasicBlockId id = BasicBlockId::Invalid;
-    FunctionId parent_function = FunctionId::Invalid;
+    BasicBlockId id{BasicBlockId::Invalid};
+    FunctionId parent_function{FunctionId::Invalid};
     
     // Address range
     Address start_address;
@@ -166,9 +249,9 @@ struct BasicBlock {
  *   - function -> xrefs_out[] (callees)
  */
 struct Function {
-    FunctionId id = FunctionId::Invalid;
-    SectionId section = SectionId::Invalid;
-    SymbolId symbol = SymbolId::Invalid;
+    FunctionId id{FunctionId::Invalid};
+    SectionId section{SectionId::Invalid};
+    SymbolId symbol{SymbolId::Invalid};
     
     // Address range
     Address start_address;
@@ -177,7 +260,7 @@ struct Function {
     
     // CFG
     std::vector<BasicBlockId> basic_blocks;
-    BasicBlockId entry_block = BasicBlockId::Invalid;
+    BasicBlockId entry_block{BasicBlockId::Invalid};
     
     // Cross-references
     std::vector<struct XRef> calls_in;   // Functions calling this one
@@ -200,8 +283,8 @@ struct Function {
  *   - section -> data_symbols[] (contained data references)
  */
 struct Section {
-    SectionId id = SectionId::Invalid;
-    BinaryId parent_binary = BinaryId::Invalid;
+    SectionId id{SectionId::Invalid};
+    BinaryId parent_binary{BinaryId::Invalid};
     
     std::string name;
     
@@ -231,7 +314,7 @@ struct Section {
  *   - symbol -> type (optional type information)
  */
 struct Symbol {
-    SymbolId id = SymbolId::Invalid;
+    SymbolId id{SymbolId::Invalid};
     
     std::string name;
     std::string demangled_name;  // C++ demangled version
@@ -249,7 +332,7 @@ struct Symbol {
     };
     Type type = Type::Unknown;
     
-    TypeId type_info = TypeId::Invalid;  // Optional type association
+    TypeId type_info{TypeId::Invalid};  // Optional type association
     
     // For imports: which DLL
     std::string source_dll;
@@ -270,7 +353,7 @@ struct XRef {
     
     // Source (always an instruction)
     Address from_address;
-    InstructionId from_instruction = InstructionId::Invalid;
+    InstructionId from_instruction{InstructionId::Invalid};
     
     // Target (function, basic block, data address)
     Address to_address;
@@ -292,7 +375,7 @@ struct XRef {
  * Supports primitive types, pointers, arrays, structures.
  */
 struct TypeInfo {
-    TypeId id = TypeId::Invalid;
+    TypeId id{TypeId::Invalid};
     
     std::string name;
     uint32_t size_bytes = 0;
@@ -319,7 +402,7 @@ struct TypeInfo {
     std::vector<Field> fields;
     
     // For pointers/arrays
-    TypeId element_type = TypeId::Invalid;
+    TypeId element_type{TypeId::Invalid};
     uint32_t element_count = 0;  // For arrays, 0 = unknown
 };
 

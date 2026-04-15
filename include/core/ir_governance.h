@@ -1,6 +1,7 @@
 #pragma once
 #include "core/ir.h"
 #include "core/ir_identity.h"
+#include "core/address_space.h"
 #include <string>
 
 namespace atlus::ir {

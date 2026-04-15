@@ -39,24 +39,24 @@ const char* address_space_name(AddressSpace space);
 struct QualifiedAddress {
     uint64_t offset = 0;
     AddressSpace space = AddressSpace::None;
-    SectionId section = SectionId::Invalid;  // For SectionSpace
+    SectionId section;  // Uses default ctor which sets to Invalid
     
     bool valid() const { return space != AddressSpace::None; }
     
     static QualifiedAddress file(uint64_t off) {
-        return {off, AddressSpace::File, SectionId::Invalid};
+        return QualifiedAddress{off, AddressSpace::File, SectionId{}};
     }
     static QualifiedAddress section(uint64_t off, SectionId sec) {
-        return {off, AddressSpace::Section, sec};
+        return QualifiedAddress{off, AddressSpace::Section, sec};
     }
     static QualifiedAddress rva(uint64_t rva) {
-        return {rva, AddressSpace::RVA, SectionId::Invalid};
+        return QualifiedAddress{rva, AddressSpace::RVA, SectionId{}};
     }
     static QualifiedAddress image(uint64_t va) {
-        return {va, AddressSpace::Image, SectionId::Invalid};
+        return QualifiedAddress{va, AddressSpace::Image, SectionId{}};
     }
     static QualifiedAddress runtime(uint64_t va) {
-        return {va, AddressSpace::Runtime, SectionId::Invalid};
+        return QualifiedAddress{va, AddressSpace::Runtime, SectionId{}};
     }
     
     bool operator==(const QualifiedAddress& other) const {
