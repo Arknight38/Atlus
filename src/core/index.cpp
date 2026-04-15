@@ -1,5 +1,6 @@
 #include "core/index.h"
 #include <algorithm>
+#include <map>
 #include <unordered_set>
 
 namespace atlus::index {
@@ -9,9 +10,9 @@ struct GlobalIndex::Impl {
     // Index storage
     std::unordered_map<std::string, std::vector<ir::SymbolId>> symbol_by_name;
     std::unordered_map<std::string, std::vector<ir::SymbolId>> symbol_by_prefix;
-    std::unordered_map<uint64_t, ir::SymbolId> symbol_by_address;
-    std::unordered_map<uint64_t, ir::FunctionId> function_by_address;
-    std::unordered_map<uint64_t, ir::InstructionId> instruction_by_address;
+    std::map<uint64_t, ir::SymbolId> symbol_by_address;
+    std::map<uint64_t, ir::FunctionId> function_by_address;
+    std::map<uint64_t, ir::InstructionId> instruction_by_address;
     std::unordered_map<uint64_t, std::vector<ir::XRef>> xrefs_incoming;
     std::unordered_map<uint64_t, std::vector<ir::XRef>> xrefs_outgoing;
     
