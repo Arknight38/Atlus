@@ -14,6 +14,7 @@ enum class ErrorCode : uint32_t {
     NotImplemented = 2,
     InvalidArgument = 3,
     OutOfMemory = 4,
+    NotFound = 5,
     
     // I/O errors
     FileNotFound = 100,

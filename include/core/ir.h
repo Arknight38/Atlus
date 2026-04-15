@@ -528,3 +528,42 @@ struct EntityIdHash {
 };
 
 } // namespace atlus::ir
+
+// std::hash specializations for ID types (needed for unordered_map/set)
+namespace std {
+    template<> struct hash<atlus::ir::BinaryId> {
+        size_t operator()(const atlus::ir::BinaryId& id) const {
+            return hash<uint32_t>{}(id.value);
+        }
+    };
+    template<> struct hash<atlus::ir::SectionId> {
+        size_t operator()(const atlus::ir::SectionId& id) const {
+            return hash<uint32_t>{}(id.value);
+        }
+    };
+    template<> struct hash<atlus::ir::SymbolId> {
+        size_t operator()(const atlus::ir::SymbolId& id) const {
+            return hash<uint32_t>{}(id.value);
+        }
+    };
+    template<> struct hash<atlus::ir::FunctionId> {
+        size_t operator()(const atlus::ir::FunctionId& id) const {
+            return hash<uint32_t>{}(id.value);
+        }
+    };
+    template<> struct hash<atlus::ir::BasicBlockId> {
+        size_t operator()(const atlus::ir::BasicBlockId& id) const {
+            return hash<uint32_t>{}(id.value);
+        }
+    };
+    template<> struct hash<atlus::ir::InstructionId> {
+        size_t operator()(const atlus::ir::InstructionId& id) const {
+            return hash<uint32_t>{}(id.value);
+        }
+    };
+    template<> struct hash<atlus::ir::TypeId> {
+        size_t operator()(const atlus::ir::TypeId& id) const {
+            return hash<uint32_t>{}(id.value);
+        }
+    };
+}

@@ -1,5 +1,6 @@
 #include "core/index.h"
 #include <algorithm>
+#include <unordered_set>
 
 namespace atlus::index {
 
@@ -56,11 +57,15 @@ void GlobalIndex::build_index(IndexType type, const ir::Binary& binary) {
             break;
             
         case IndexType::InstructionByAddress:
-            for (const auto& bb : binary.basic_blocks()) {
-                for (const auto& insn : bb->instructions) {
-                    const ir::Instruction* i = binary.get_instruction(insn);
-                    if (i) {
-                        impl_->instruction_by_address[i->address.offset] = insn;
+            for (const auto& fn : binary.functions()) {
+                for (const auto& bb_id : fn->basic_blocks) {
+                    const ir::BasicBlock* bb = binary.get_basic_block(bb_id);
+                    if (!bb) continue;
+                    for (const auto& insn : bb->instructions) {
+                        const ir::Instruction* i = binary.get_instruction(insn);
+                        if (i) {
+                            impl_->instruction_by_address[i->address.offset] = insn;
+                        }
                     }
                 }
             }
