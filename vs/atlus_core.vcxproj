@@ -35,14 +35,14 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)../include;$(ProjectDir)../third_party/zydis/include;$(ProjectDir)../third_party/zydis/dependencies/zycore/include;$(ProjectDir)../third_party/zydis/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../include;$(ProjectDir)../third_party/zydis/include;$(ProjectDir)../third_party/zydis/dependencies/zycore/include;$(ProjectDir)../third_party/zydis/src;$(ProjectDir)../third_party/lief/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>ZYDIS_STATIC_BUILD;ZYCORE_STATIC_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)../include;$(ProjectDir)../third_party/zydis/include;$(ProjectDir)../third_party/zydis/dependencies/zycore/include;$(ProjectDir)../third_party/zydis/src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../include;$(ProjectDir)../third_party/zydis/include;$(ProjectDir)../third_party/zydis/dependencies/zycore/include;$(ProjectDir)../third_party/zydis/src;$(ProjectDir)../third_party/lief/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
