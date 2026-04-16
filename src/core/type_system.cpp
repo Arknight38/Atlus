@@ -304,19 +304,23 @@ const TypeInfo* TypeDatabase::get_type(TypeId id) const {
 }
 
 TypeId TypeDatabase::get_handle_type() {
-    return find_by_name("HANDLE").value_or(TypeId::Invalid);
+    auto result = find_by_name("HANDLE");
+    return result ? *result : TypeId(TypeId::Invalid);
 }
 
 TypeId TypeDatabase::get_pointer_type() {
-    return find_by_name("void*").value_or(TypeId::Invalid);
+    auto result = find_by_name("void*");
+    return result ? *result : TypeId(TypeId::Invalid);
 }
 
 TypeId TypeDatabase::get_string_type() {
-    return find_by_name("char*").value_or(TypeId::Invalid);
+    auto result = find_by_name("char*");
+    return result ? *result : TypeId(TypeId::Invalid);
 }
 
 TypeId TypeDatabase::get_size_t_type() {
-    return find_by_name("size_t").value_or(TypeId::Invalid);
+    auto result = find_by_name("size_t");
+    return result ? *result : TypeId(TypeId::Invalid);
 }
 
 } // namespace atlus::ir
