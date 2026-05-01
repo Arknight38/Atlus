@@ -2,7 +2,7 @@
 
 A fast, native binary diff and reverse engineering workbench for Windows PE files.
 
-**Architecture:** C++20 modular design with a unified IR (Intermediate Representation) system, content-addressed identity, and explicit invalidation semantics. Dear ImGui-based GUI with dockable panels.
+**Architecture:** C++17 modular design with a unified IR (Intermediate Representation) system, content-addressed identity, explicit invalidation semantics, and a Qt6-based GUI.
 
 **Target:** Windows x64/x86 PE files (`.exe`, `.dll`, `.sys`).
 
@@ -11,13 +11,12 @@ A fast, native binary diff and reverse engineering workbench for Windows PE file
 ## Quick Start
 
 ```powershell
-# Setup (one-time)
+# Setup submodules (one-time)
 git submodule update --init --recursive
-cd scripts
-.\setup.ps1
 
 # Build
-.\build.ps1 -j 8
+cd scripts
+.\build.ps1
 
 # Run
 .\build\Release\Atlus.exe
@@ -30,7 +29,7 @@ cd scripts
 ```
 Atlus/
 ├── scripts/              # Build and setup scripts
-│   ├── setup.ps1         # Bootstrap vcpkg dependencies
+│   ├── setup.ps1         # Bootstrap dependencies
 │   └── build.ps1         # CMake build script
 ├── include/core/         # Public API headers
 │   ├── ir.h              # Unified IR entities
@@ -42,11 +41,18 @@ Atlus/
 │   ├── diff_engine.h     # Four-level diff system
 │   ├── disassembler.h    # Zydis wrapper
 │   ├── query.h           # SQL-like IR query layer
+│   ├── cfg_builder.h     # Control-flow graph builder
+│   ├── revng_decompiler.h # rev.ng decompiler integration
+│   ├── xref_analyzer.h   # Cross-reference analysis
+│   ├── string_analyzer.h # String table extraction
+│   ├── switch_analyzer.h # Switch-jump table detection
+│   ├── structure_analyzer.h # Struct/union layout recovery
+│   ├── thread_pool.h     # Background worker pool
 │   └── ...
 ├── src/core/             # Library implementation
-├── src/ui/               # Dear ImGui GUI layer
-├── third_party/          # Submodules (ImGui, LIEF, etc.)
-└── docs/                 # Architecture specifications
+├── src/ui/qt/            # Qt6 GUI layer (panels, models, dialogs)
+├── third_party/          # Submodules (Zydis, ImGui, LIEF, RetDec)
+└── vs/                   # Visual Studio solution files
 ```
 
 ---
@@ -60,23 +66,40 @@ Atlus/
 - UTF-8 path support via Win32 APIs
 - Size validation before allocation
 
-#### PE Parsing (`pe_parser.h`)
-- Full PE32/PE32+ header parsing via LIEF
+#### PE Parsing (`pe_parser.h`, `pe_import_export.h`)
+- Full PE32/PE32+ header parsing
 - Section table extraction (name, VA, size, raw offset, flags)
-- Import directory reconstruction (DLL names, imported functions)
+- Import directory reconstruction (DLL names, imported functions, ordinals)
+- Export directory enumeration (names, RVAs, ordinals, forwarders)
 - RVA-to-file-offset translation with section boundary validation
 
-#### Disassembly (`disassembler.h`)
+#### Disassembly (`disassembler.h`, `disassembly_cache.h`)
 - Zydis-backed decoder supporting x86-32 and x86-64 modes
 - Full instruction metadata: address, length, mnemonic, operands, raw bytes
 - Control flow classification: `is_branch()`, `is_call()`, `is_ret()`
 - Decode-or-skip interface for resilient parsing
+- LRU disassembly cache to avoid redundant decoding
 
 #### Function Analysis (`analyzer.h`)
 - Prologue heuristic detection: `push rbp` / `mov rbp,rsp` / `sub rsp,N` patterns
 - Complete function disassembly with instruction lists
-- Cross-reference (XRef) building: calls in/out with address resolution
 - Function boundary estimation based on instruction flow
+
+#### Control Flow Graph (`cfg_builder.h`)
+- Iterative leader-identification algorithm for basic-block discovery
+- Successor / predecessor edge linking
+- Conditional, unconditional, and fall-through edge classification
+- Per-function and per-section batch CFG generation
+
+#### Cross-Reference Analysis (`xref_analyzer.h`)
+- Builds call-in and call-out graphs
+- Resolves target addresses for direct calls/jumps
+- Updates IR `XRef` entities (derived, read-only)
+
+#### String & Data Analysis (`string_analyzer.h`, `switch_analyzer.h`, `structure_analyzer.h`)
+- ASCII / wide-string table extraction with reference tracking
+- Switch-jump table detection (`jmp [reg*4+base]`)
+- Structure layout recovery from stack-frame and field-access patterns
 
 ### 2. Four-Level Diff System (`diff_engine.h`)
 
@@ -102,33 +125,39 @@ Atlus/
 - **Binary Scanning:** Fast single-pattern scan returning all match offsets
 - **Context Display:** Configurable byte context around hits in UI
 
-### 4. Ghidra Decompiler Integration (`ghidra_decompiler.h`)
+### 4. rev.ng Decompiler Integration (`revng_decompiler.h`)
 
-- Subprocess management for Ghidra's `decompile.exe` headless mode
-- XML protocol communication via stdin/stdout
-- C pseudocode extraction from `<c>` tags
-- Result caching keyed by function address
-- Background decompilation via `std::async` (non-blocking UI)
-- Configurable path to decompiler executable
+- **Auto-detected backend:** Native Linux / WSL / Docker on Windows
+- **Async lift pipeline:** Background `import-binary` → `detect-abi` → ready
+- **Decompilation:** C pseudocode for any function address
+- **Control Flow Graph:** `emit-cfg` producing structured YAML
+- **Call Graph:** `render-svg-call-graph` producing SVG
+- **ABI Detection:** Automatic calling-convention inference
+- **Result caching** keyed by function address
+- **Progress callbacks** for each analysis stage
 
 ---
 
 ## GUI Features
 
-### Dockable Panel Layout
+### Dockable Panel Layout (Qt6)
 
-Panels can be dragged, tabbed, split, and detached. Layout persists to `atlus_layout.ini`.
+Panels are implemented as `QDockWidget`s with dark-theme styling and configurable font sizes. Layout persists via `QSettings`.
 
 | Panel | Contents | Interactions |
 |-------|----------|--------------|
-| **Functions** | Detected functions with name/address/size filterable list | Click to select function, triggers disassembly + decompilation |
+| **Functions** | Detected functions with name/address/size filterable list | Click to select function; triggers disassembly, CFG, and decompilation |
 | **Sections** | PE section table with VA/size/flags/diff status | Click to jump to section in hex view |
 | **Imports** | Hierarchical import tree (DLL → functions) with search | Filter by DLL or function name |
-| **Hex / Diff** | Hex dump with ASCII sidebar, diff highlighting | Context menu: copy offset/byte, jump to section. Changed bytes shown in red (diff mode) |
-| **Disassembly** | Instruction-level view with mnemonic/operand/bytes coloring | Side-by-side diff view in diff mode. Color-coded: calls (green), branches (blue), returns (red) |
-| **Pseudocode** | C decompilation output from Ghidra | Line-numbered display, status indicator |
-| **AOB Scanner** | Pattern input, scan results, generated signatures from diff | Pattern scan with context bytes. Toggle IDA/CE format display |
-| **Log** | Timestamped operation log with level coloring | Auto-scroll toggle, horizontal scroll |
+| **Exports** | Exported symbols with RVAs and ordinals | Click to jump to export address |
+| **Hex** | Hex dump with ASCII sidebar, diff highlighting | Context menu: copy offset/bytes, jump to section. Changed bytes highlighted in diff mode |
+| **Disassembly** | Instruction-level view with mnemonic/operand/bytes | Syntax highlighting; side-by-side diff view in diff mode |
+| **Pseudocode** | C decompilation output from rev.ng | Line-numbered display with status indicator |
+| **XRefs** | Cross-reference tables (calls in / calls out) | Click to navigate to source or target |
+| **AOB Scanner** | Pattern input, scan results, generated signatures from diff | Pattern scan with context bytes; toggle IDA/CE format |
+| **CFG** | Control-flow graph rendered from rev.ng YAML or local builder | Zoom and pan support |
+| **Call Graph** | Whole-binary call graph rendered from rev.ng SVG | Zoom and pan support |
+| **Log** | Timestamped operation log with level coloring | Auto-scroll toggle |
 
 ### Menu System
 
@@ -139,35 +168,42 @@ Panels can be dragged, tabbed, split, and detached. Layout persists to `atlus_la
 - `Close` — Clear session state
 
 **Edit Menu:**
-- `Settings` (Ctrl+,) — Modal with persistence
+- `Settings` (Ctrl+,) — Appearance and behavior preferences
 
 **View Menu:**
-- Toggle visibility for all 8 panels
-- `Reset Layout` — Delete ini, restore default dock positions
+- Toggle visibility for all dock panels
+- `Reset Layout` — Restore default dock positions
 
 **Analysis Menu:**
+- `Analysis Options...` — Per-session analysis configuration (rev.ng, scan toggles)
+- `Reanalyze` — Re-run the full analysis pipeline on the current file
 - `Find Functions` (F) — Prologue scan on current file
+- `Find Functions (both files)` (Shift+F) — Dual-file prologue scan
 - `Run Byte Diff` (B) — Level 1 diff
 - `Run Section Diff` (S) — Level 2 diff
-- `Find Functions (both files)` (Shift+F) — Dual-file prologue scan
-- `Run Function Diff` (Shift+D) — Level 3 diff (requires both function lists)
-- `Full Diff` (Ctrl+Shift+D) — Runs all levels + generates AOB signatures
+- `Run Function Diff` (Shift+D) — Level 3 diff
+- `Full Diff` (Ctrl+Shift+D) — All levels + AOB signature generation
 - `Scan AOB Pattern` (A) — Opens AOB panel and triggers scan
 
-### Settings System (`settings.cpp`)
+**Decompiler Menu:**
+- `Enable rev.ng` — Toggle rev.ng integration on/off
+- `Request CFG` — Emit CFG for selected function
+- `Request Call Graph` — Render whole-binary call graph
 
-Persistent INI storage for:
+### Settings System (`dialogs/settings_dialog.cpp`)
+
+Persistent `QSettings` storage for:
 
 **Appearance:**
-- Font size (10–20px, live reload)
-- Color theme (Dark/Light/Classic)
+- Font size (live reload)
+- Dark / light theme toggle
 - Hex view ASCII sidebar toggle
 - Hex columns (8/16/32 bytes per row)
 
 **Analysis:**
 - Auto-scan functions on file open
 - Auto-run full diff on diff open
-- Disassembler mode (x86-64/x86-32)
+- Disassembler mode (x86-64 / x86-32)
 
 **AOB:**
 - Show Cheat Engine-style patterns alongside IDA format
@@ -177,9 +213,18 @@ Persistent INI storage for:
 - Maximum ring buffer size (100–10000 lines)
 
 **Decompiler:**
-- Path to `decompile.exe` (browse button, file dialog)
-- Start/Stop subprocess control
+- Path to rev.ng executable (browse button)
+- Enable/disable rev.ng backend
 - Cache clear button
+
+### Analysis Options Dialog
+
+Per-session configuration before running analysis:
+- Function prologue scanning
+- XRef analysis
+- Import/Export analysis
+- Signature generation
+- rev.ng lift + advanced features (CFG, call graph, ABI, data layout, cross-XRefs)
 
 ---
 
@@ -194,12 +239,12 @@ Atlus uses a unified Intermediate Representation (IR) as the single source of tr
 | **Raw Binary** | Immutable source of truth | File on disk |
 | **IR** | Derived, cacheable, invalidatable | Session files |
 | **Pipeline Cache** | Reproducible derivations | Recomputed on demand |
-| **UI State** | Transient projection | Layout INI only |
+| **UI State** | Transient projection | `QSettings` |
 
 ### IR Entities (`ir.h`)
 
 - **Binary** — Root container, owns all entities
-- **Section** — PE/ELF sections with 5-space address translation
+- **Section** — PE sections with 5-space address translation
 - **Function** — Content-addressed via prologue hash + entry point
 - **BasicBlock** — Content-addressed instruction sequences
 - **Instruction** — Immutable after creation
@@ -219,6 +264,8 @@ Atlus uses a unified Intermediate Representation (IR) as the single source of tr
 - **Analysis Pipeline** — DAG of analysis stages with explicit dependencies
 - **Invalidation Engine** — Formal rules: change type → affected stages → cascade
 - **Query Layer** — SQL-like API over IR graph (`query.h`)
+- **Index** — Fast lookup tables for addresses, names, hashes (`index.h`)
+- **Type System** — Inferred primitive and aggregate types (`type_system.h`)
 
 ### Key Design Documents
 
@@ -236,14 +283,15 @@ See `docs/` for detailed specifications:
 
 - Visual Studio 2022+ with Desktop C++ workload
 - Windows SDK
-- CMake 3.20+
+- CMake 3.16+
 - Git
+- Qt6 (Core, Widgets, Concurrent) — installed via `aqtinstall` or official installer
 
 ### Quick Build
 
 ```powershell
 cd scripts
-.\setup.ps1    # One-time: bootstrap vcpkg, install LIEF
+.\setup.ps1    # One-time: bootstrap Qt6, Zydis, etc.
 .\build.ps1    # Build Release
 ```
 
@@ -254,7 +302,7 @@ cd scripts
 git submodule update --init --recursive
 
 # Configure
-cmake -B build -S . -DCMAKE_BUILD_TYPE=Release `-DCMAKE_TOOLCHAIN_FILE=third_party/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
 
 # Build
 cmake --build build --config Release --parallel 8
@@ -263,7 +311,6 @@ cmake --build build --config Release --parallel 8
 ### Output
 
 - `build/Release/Atlus.exe`
-- DLLs auto-copied from vcpkg
 
 ---
 
@@ -292,22 +339,33 @@ cmake --build build --config Release --parallel 8
 | PE32 | Full | x86 Windows executables |
 | PE32+ | Full | x64 Windows executables |
 | Raw binary | Partial | Hex view only, no PE analysis |
-| ELF | None | Not implemented |
-| Mach-O | None | Not implemented |
+| ELF | Partial | Parser stubs present; analysis pipeline not wired |
+| Mach-O | Partial | Parser stubs present; analysis pipeline not wired |
 
 ---
 
 ## Limitations & Design Notes
 
 - **Windows-only:** Win32 APIs for file dialogs, process management, and windowing
-- **Single-threaded UI:** Background decompilation only; all other analysis is synchronous
 - **In-memory files:** Entire binary loaded into RAM; no memory-mapping for large files
 - **Function detection:** Relies on prologue heuristics; may miss non-standard entry points
-- **Decompiler:** Requires bundled Ghidra `decompile.exe`; no fallback disassembler-to-C
+- **Decompiler:** Requires rev.ng backend (WSL, Docker, or native Linux); no built-in disassembler-to-C
+- **ELF / Mach-O:** Parser infrastructure exists but is not yet fully integrated into the analysis pipeline
 
 ---
 
 ## Version History
+
+- **1.1.0** — Qt6 rewrite & rev.ng integration
+  - Migrated GUI from Dear ImGui to Qt6 Widgets
+  - Added rev.ng decompiler backend with async lift pipeline
+  - Added CFG Panel and Call Graph Panel
+  - Added XRefs Panel with navigation
+  - Added Analysis Options dialog
+  - Added disassembly cache, thread pool, and background workers
+  - Added string analyzer, switch analyzer, structure analyzer
+  - Added export directory parsing
+  - Added index and type system layers
 
 - **1.0.0** — Initial release
   - Four-level diff engine (byte, section, function, AOB)
