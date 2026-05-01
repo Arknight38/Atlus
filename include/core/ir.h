@@ -534,6 +534,12 @@ struct EntityIdHash {
 
 // std::hash specializations for ID types (needed for unordered_map/set)
 namespace std {
+    template<> struct hash<atlus::ir::Address> {
+        size_t operator()(const atlus::ir::Address& addr) const {
+            // Combine offset and space into hash
+            return hash<uint64_t>{}(addr.offset) ^ (hash<int>{}(static_cast<int>(addr.space)) << 1);
+        }
+    };
     template<> struct hash<atlus::ir::BinaryId> {
         size_t operator()(const atlus::ir::BinaryId& id) const {
             return hash<uint32_t>{}(id.value);

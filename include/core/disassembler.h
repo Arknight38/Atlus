@@ -36,6 +36,24 @@ public:
         size_t         max_instructions = SIZE_MAX
     ) const;
 
+    // Cache-aware disassembly - checks cache first, falls back to decode
+    // file_hash is SHA-256 of entire file bytes
+    std::vector<Instruction> disassemble_cached(
+        const uint8_t* data,
+        size_t         size,
+        uint64_t       base_address,
+        const std::string& file_hash
+    ) const;
+
+    // Store disassembly result in cache
+    bool cache_result(
+        const std::string& file_hash,
+        uint64_t base_address,
+        const uint8_t* data,
+        size_t size,
+        const std::vector<Instruction>& instructions
+    ) const;
+
     // Single-instruction decode. Returns false if decoding fails.
     bool decode_one(
         const uint8_t* data,

@@ -2,6 +2,7 @@
 <Project>
   <PropertyGroup>
     <AtlusVcpkgInstalled>$(MSBuildThisFileDirectory)vcpkg_installed\x64-windows</AtlusVcpkgInstalled>
+    <RizinInstallDir>$(MSBuildThisFileDirectory)..\third_party\rizin</RizinInstallDir>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(AtlusVcpkgHeaders)' == 'true'">
@@ -12,24 +13,42 @@
   </ItemDefinitionGroup>
 
   <ItemDefinitionGroup Condition="'$(AtlusVcpkgLink)' == 'true' and '$(Configuration)' == 'Debug'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(RizinInstallDir)\include;$(RizinInstallDir)\include\librz;$(AtlusVcpkgInstalled)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LIEF_IMPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(AtlusVcpkgInstalled)\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LIEF.lib;fmtd.lib;spdlogd.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;everest.lib;p256m.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(AtlusVcpkgInstalled)\debug\lib;$(RizinInstallDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LIEF.lib;fmtd.lib;spdlogd.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;everest.lib;p256m.lib;rz_core.lib;rz_analysis.lib;rz_bin.lib;rz_asm.lib;rz_util.lib;rz_config.lib;rz_io.lib;rz_parse.lib;rz_debug.lib;rz_cons.lib;rz_flag.lib;rz_lang.lib;rz_hash.lib;rz_crypto.lib;rz_reg.lib;rz_syscall.lib;rz_diff.lib;rz_search.lib;rz_sign.lib;rz_egg.lib;rz_bp.lib;rz_socket.lib;rz_magic.lib;rz_main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
   <ItemDefinitionGroup Condition="'$(AtlusVcpkgLink)' == 'true' and '$(Configuration)' == 'Release'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(RizinInstallDir)\include;$(RizinInstallDir)\include\librz;$(AtlusVcpkgInstalled)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LIEF_IMPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(AtlusVcpkgInstalled)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>LIEF.lib;fmt.lib;spdlog.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;everest.lib;p256m.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(AtlusVcpkgInstalled)\lib;$(RizinInstallDir)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>LIEF.lib;fmt.lib;spdlog.lib;mbedtls.lib;mbedx509.lib;mbedcrypto.lib;everest.lib;p256m.lib;rz_core.lib;rz_analysis.lib;rz_bin.lib;rz_asm.lib;rz_util.lib;rz_config.lib;rz_io.lib;rz_parse.lib;rz_debug.lib;rz_cons.lib;rz_flag.lib;rz_lang.lib;rz_hash.lib;rz_crypto.lib;rz_reg.lib;rz_syscall.lib;rz_diff.lib;rz_search.lib;rz_sign.lib;rz_egg.lib;rz_bp.lib;rz_socket.lib;rz_magic.lib;rz_main.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
 
   <Target Name="AtlusCopyVcpkgDllsDebug" AfterTargets="PostBuildEvent" Condition="'$(AtlusVcpkgLink)' == 'true' and '$(Configuration)' == 'Debug'">
     <Copy SourceFiles="$(AtlusVcpkgInstalled)\debug\bin\LIEF.dll;$(AtlusVcpkgInstalled)\debug\bin\fmtd.dll;$(AtlusVcpkgInstalled)\debug\bin\spdlogd.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <!-- Copy rizin DLLs if they exist -->
+    <ItemGroup>
+      <RizinDlls Include="$(RizinInstallDir)\bin\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RizinDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="'@(RizinDlls)' != ''" />
   </Target>
 
   <Target Name="AtlusCopyVcpkgDllsRelease" AfterTargets="PostBuildEvent" Condition="'$(AtlusVcpkgLink)' == 'true' and '$(Configuration)' == 'Release'">
     <Copy SourceFiles="$(AtlusVcpkgInstalled)\bin\LIEF.dll;$(AtlusVcpkgInstalled)\bin\fmt.dll;$(AtlusVcpkgInstalled)\bin\spdlog.dll" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+    <!-- Copy rizin DLLs if they exist -->
+    <ItemGroup>
+      <RizinDlls Include="$(RizinInstallDir)\bin\*.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RizinDlls)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" Condition="'@(RizinDlls)' != ''" />
   </Target>
 </Project>

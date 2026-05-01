@@ -1,6 +1,7 @@
 #pragma once
 #include "disassembler.h"
 #include "pe_parser.h"
+#include "thread_pool.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -40,6 +41,15 @@ public:
     std::vector<Function> find_functions(
         const PESection& section,
         uint64_t         image_base
+    ) const;
+
+    // Multi-threaded function detection - significantly faster for large sections.
+    // Uses thread pool to scan section in parallel chunks.
+    std::vector<Function> find_functions_parallel(
+        const PESection& section,
+        uint64_t         image_base,
+        ThreadPool&      pool,
+        AnalysisProgress* progress = nullptr
     ) const;
 
     // Disassemble a known function starting at start_rva.

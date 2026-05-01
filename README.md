@@ -2,15 +2,26 @@
 
 A fast, native binary diff and reverse engineering workbench for Windows PE files.
 
-**Architecture:** Multi-layer C++20 design with a static analysis library (`atlus_core`) driving a Dear ImGui-based GUI. Built for speed, extensibility, and reverse engineering workflows.
+**Architecture:** C++20 modular design with a unified IR (Intermediate Representation) system, content-addressed identity, and explicit invalidation semantics. Dear ImGui-based GUI with dockable panels.
 
 **Target:** Windows x64/x86 PE files (`.exe`, `.dll`, `.sys`).
 
-**Dependencies:**
-- [LIEF](https://github.com/lief-project/LIEF) via vcpkg — PE/ELF/Mach-O parsing
-- [Dear ImGui](https://github.com/ocornut/imgui) (docking branch) — Immediate-mode UI
-- [Zydis](https://github.com/zyantific/zydis) — x86/x64 disassembler
-- Ghidra `decompile.exe` — C pseudocode generation (bundled, optional)
+---
+
+## Quick Start
+
+```powershell
+# Setup (one-time)
+git submodule update --init --recursive
+cd scripts
+.\setup.ps1
+
+# Build
+.\build.ps1 -j 8
+
+# Run
+.\build\Release\Atlus.exe
+```
 
 ---
 
@@ -18,31 +29,24 @@ A fast, native binary diff and reverse engineering workbench for Windows PE file
 
 ```
 Atlus/
-├── README.md
-├── .gitignore
-├── .gitmodules
-├── vs/                           # Visual Studio solution
-│   ├── Atlus.sln
-│   ├── vcpkg.json                # LIEF dependency
-│   ├── Atlus.vcpkg.props
-│   ├── Directory.Build.props
-│   ├── atlus_core.vcxproj        # Static library (analysis engine)
-│   ├── atlus_imgui.vcxproj       # ImGui + backends
-│   └── atlus_gui.vcxproj         # Executable (links core + imgui)
-├── include/core/                 # Public API headers
-│   ├── analyzer.h                # Function detection and analysis
-│   ├── diff_engine.h             # Four-level diff system
-│   ├── disassembler.h            # Zydis wrapper
-│   ├── formatter.h               # Console output formatting
-│   ├── ghidra_decompiler.h       # Decompiler subprocess manager
-│   ├── loader.h                  # Raw binary I/O
-│   ├── pattern_scanner.h         # AOB signature generation/scanning
-│   └── pe_parser.h               # PE structure parsing
-├── src/core/                     # Library implementation
-└── src/ui/                       # GUI layer (ImGui)
-    ├── main.cpp                  # Entry point, window/message loop
-    ├── menu_bar.cpp              # File dialogs, analysis menu, layout
-    └── panels_*.cpp              # Panel implementations
+├── scripts/              # Build and setup scripts
+│   ├── setup.ps1         # Bootstrap vcpkg dependencies
+│   └── build.ps1         # CMake build script
+├── include/core/         # Public API headers
+│   ├── ir.h              # Unified IR entities
+│   ├── ir_identity.h     # ContentHash, versioning
+│   ├── ir_governance.h   # Entity governance rules
+│   ├── address_space.h   # 5-space address translation
+│   ├── analysis_pipeline.h # DAG-based analysis stages
+│   ├── invalidation.h    # Explicit invalidation engine
+│   ├── diff_engine.h     # Four-level diff system
+│   ├── disassembler.h    # Zydis wrapper
+│   ├── query.h           # SQL-like IR query layer
+│   └── ...
+├── src/core/             # Library implementation
+├── src/ui/               # Dear ImGui GUI layer
+├── third_party/          # Submodules (ImGui, LIEF, etc.)
+└── docs/                 # Architecture specifications
 ```
 
 ---
@@ -179,36 +183,50 @@ Persistent INI storage for:
 
 ---
 
-## Technical Implementation Details
+## IR Architecture
 
-### State Management (`gui_state.h`)
+Atlus uses a unified Intermediate Representation (IR) as the single source of truth for all analysis state.
 
-Global state split into functional groups:
-- **Session:** `g_file_a/b`, `g_pe_a/b`, `g_file_loaded`, `g_diff_mode`
-- **Analysis Results:** `g_diff_result`, `g_functions`, `g_signatures`, `g_disassembly`
-- **UI State:** Panel visibility flags, dock state, recent files list
-- **Decompiler:** Globals for async operation tracking (`g_decompile_pending`, `g_decompile_future`)
+### Truth Hierarchy
 
-### Hex View Virtualization
+| Layer | Role | Persistence |
+|-------|------|-------------|
+| **Raw Binary** | Immutable source of truth | File on disk |
+| **IR** | Derived, cacheable, invalidatable | Session files |
+| **Pipeline Cache** | Reproducible derivations | Recomputed on demand |
+| **UI State** | Transient projection | Layout INI only |
 
-Uses `ImGuiListClipper` for O(1) memory regardless of file size. Calculates visible rows from scroll position. Right-click context menu provides offset-aware actions.
+### IR Entities (`ir.h`)
 
-### Diff Highlighting
+- **Binary** — Root container, owns all entities
+- **Section** — PE/ELF sections with 5-space address translation
+- **Function** — Content-addressed via prologue hash + entry point
+- **BasicBlock** — Content-addressed instruction sequences
+- **Instruction** — Immutable after creation
+- **Symbol** — Imports, exports, discovered labels
+- **XRef** — Cross-references (derived, never user-creatable)
+- **TypeInfo** — Type inference results
 
-Byte-level diff status tracked in `std::unordered_set<size_t> g_diff_offset_set` for O(1) lookup during hex rendering. Red color applied only to changed bytes.
+### Identity System (`ir_identity.h`)
 
-### Function Selection Flow
+- **ContentHash** — 128-bit hash for deterministic identity
+- **IdentityVersion** — Provenance tracking (stage sequence, timestamp)
+- **DependencyMask** — 32-bit analysis stage dependencies
+- **DirtyFlag** — Invalidation states (Clean/NeedsUpdate/NeedsRebuild/Invalid)
 
-1. User clicks function in Functions panel
-2. `g_selected_fn` pointer updated
-3. Disassembly cache cleared (`g_last_disasm_fn` invalidation)
-4. Pseudocode cleared
-5. If decompiler running: new `std::async` task launched
-6. Pseudocode panel polls future status, displays result when ready
+### Pipeline & Invalidation
 
-### Recent Files
+- **Analysis Pipeline** — DAG of analysis stages with explicit dependencies
+- **Invalidation Engine** — Formal rules: change type → affected stages → cascade
+- **Query Layer** — SQL-like API over IR graph (`query.h`)
 
-Stored as vector in memory, persisted to `atlus_recent.ini`. Duplicate detection on add. Selected files move to front.
+### Key Design Documents
+
+See `docs/` for detailed specifications:
+- `ATLUS_IR_SPEC_V1.md` — Complete IR specification
+- `IR_IDENTITY_CONTRACT.md` — Identity stability rules
+- `PIPELINE_INVALIDATION_MATRIX.md` — Invalidation semantics
+- `CACHING_BOUNDARY_CONTRACT.md` — Cache vs recompute rules
 
 ---
 
@@ -216,44 +234,36 @@ Stored as vector in memory, persisted to `atlus_recent.ini`. Duplicate detection
 
 ### Prerequisites
 
-- Visual Studio 2022/2025 with Desktop C++ workload
+- Visual Studio 2022+ with Desktop C++ workload
 - Windows SDK
-- Bundled vcpkg at `VC\vcpkg\vcpkg.exe`
-- Git (for submodules)
+- CMake 3.20+
+- Git
 
-### Initial Setup
+### Quick Build
 
 ```powershell
-# 1. Clone with submodules (ImGui + Zydis)
+cd scripts
+.\setup.ps1    # One-time: bootstrap vcpkg, install LIEF
+.\build.ps1    # Build Release
+```
+
+### Manual Build
+
+```powershell
+# Setup submodules
 git submodule update --init --recursive
 
-# 2. Install LIEF via vcpkg (slow on first run)
-cd vs
-& "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\vcpkg.exe" install --triplet x64-windows
-```
+# Configure
+cmake -B build -S . -DCMAKE_BUILD_TYPE=Release `-DCMAKE_TOOLCHAIN_FILE=third_party/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-### Build
-
-```powershell
-# Open vs/Atlus.sln in Visual Studio
-# - Select x64 + Debug or Release
-# - Build solution (F7)
-# - Output: vs/out/x64/Debug/atlus.exe
-
-# Or command line:
-msbuild vs\Atlus.sln /p:Configuration=Release /p:Platform=x64
-```
-
-**Note:** If the ImGui submodule fails, manually clone the docking branch:
-```powershell
-Remove-Item -Recurse -Force third_party/imgui
-git clone --depth 1 --branch docking https://github.com/ocornut/imgui third_party/imgui
+# Build
+cmake --build build --config Release --parallel 8
 ```
 
 ### Output
 
-- `vs/out/x64/(Debug|Release)/atlus.exe`
-- Required DLLs copied adjacent (LIEF, Zydis runtime)
+- `build/Release/Atlus.exe`
+- DLLs auto-copied from vcpkg
 
 ---
 

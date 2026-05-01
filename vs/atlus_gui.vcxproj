@@ -62,6 +62,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ResourceCompile Include="atlus_resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\src\ui\main.cpp" />
     <ClCompile Include="..\src\ui\gui_state.cpp" />
     <ClCompile Include="..\src\ui\menu_bar.cpp" />
@@ -72,6 +75,7 @@
     <ClCompile Include="..\src\ui\panels_aob.cpp" />
     <ClCompile Include="..\src\ui\panels_pseudocode.cpp" />
     <ClCompile Include="..\src\ui\panels_log.cpp" />
+    <ClCompile Include="..\src\ui\panels_xrefs.cpp" />
     <ClCompile Include="..\src\ui\settings.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +87,7 @@
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
+    <VcpkgEnabled>false</VcpkgEnabled>
     <AtlusVcpkgHeaders>false</AtlusVcpkgHeaders>
     <AtlusVcpkgLink>false</AtlusVcpkgLink>
   </PropertyGroup>

@@ -1,0 +1,14 @@
+#include <QApplication>
+#include "mainwindow.h"
+
+int main(int argc, char* argv[])
+{
+    QApplication app(argc, argv);
+    app.setApplicationName("Atlus");
+    app.setOrganizationName("Atlus");
+
+    MainWindow window;
+    window.show();
+
+    return app.exec();
+}

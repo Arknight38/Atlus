@@ -3,6 +3,7 @@
 #include "pe_parser.h"
 #include "disassembler.h"
 #include "analyzer.h"
+#include "thread_pool.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -99,6 +100,23 @@ public:
         const BinaryFile& new_file,
         bool run_section_diff  = true,
         bool run_function_diff = false // requires Zydis; off by default
+    );
+
+    // Parallel variants using thread pool (P1 roadmap item)
+    static std::vector<ByteDiff> byte_diff_parallel(
+        const BinaryFile& old_file,
+        const BinaryFile& new_file,
+        ThreadPool& pool,
+        AnalysisProgress* progress = nullptr
+    );
+
+    static DiffResult full_diff_parallel(
+        const BinaryFile& old_file,
+        const BinaryFile& new_file,
+        ThreadPool& pool,
+        AnalysisProgress* progress = nullptr,
+        bool run_section_diff = true,
+        bool run_function_diff = false
     );
 
 private:

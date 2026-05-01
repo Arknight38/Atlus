@@ -1,4 +1,5 @@
 #include "core/disassembler.h"
+#include "core/disassembly_cache.h"
 #include <Zydis/Zydis.h>
 
 namespace atlus {
@@ -107,6 +108,62 @@ bool Disassembler::decode_one(
     out.bytes.assign(data, data + instr.length);
     
     return true;
+}
+
+// ── Cache-aware disassembly ───────────────────────────────────────────────────
+
+std::vector<Instruction> Disassembler::disassemble_cached(
+    const uint8_t* data,
+    size_t         size,
+    uint64_t       base_address,
+    const std::string& file_hash
+) const {
+    // Initialize cache on first use
+    auto& cache = get_disassembly_cache();
+    if (!cache.is_open()) {
+        cache.open();
+    }
+
+    // Try to get from cache first
+    DisassemblyBlock cached_block;
+    if (cache.get_block(file_hash, base_address, cached_block)) {
+        // Verify that raw bytes match (to detect stale cache)
+        bool bytes_match = cached_block.size == size;
+        if (bytes_match && size > 0) {
+            bytes_match = (std::memcmp(cached_block.raw_bytes.data(), data, size) == 0);
+        }
+
+        if (bytes_match) {
+            // Cache hit - return cached instructions
+            return cached_block.instructions;
+        }
+    }
+
+    // Cache miss - disassemble normally
+    return disassemble(data, size, base_address, SIZE_MAX);
+}
+
+bool Disassembler::cache_result(
+    const std::string& file_hash,
+    uint64_t base_address,
+    const uint8_t* data,
+    size_t size,
+    const std::vector<Instruction>& instructions
+) const {
+    auto& cache = get_disassembly_cache();
+    if (!cache.is_open()) {
+        if (!cache.open()) {
+            return false;
+        }
+    }
+
+    DisassemblyBlock block;
+    block.address = base_address;
+    block.size = size;
+    block.raw_bytes.assign(data, data + size);
+    block.instructions = instructions;
+
+    return cache.put_block(file_hash, base_address, block);
 }
 
 } // namespace atlus

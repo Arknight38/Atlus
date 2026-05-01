@@ -1,5 +1,8 @@
 #include "core/analyzer.h"
 #include <algorithm>
+#include <thread>
+#include <mutex>
+#include <atomic>
 #include <Zydis/Zydis.h>
 
 namespace atlus {
@@ -182,6 +185,127 @@ std::vector<Function> Analyzer::find_functions(
         // (e.g. prologue bytes that appear as operands of mov instructions).
         // Use max(1, fn_bytes) so we always advance.
         i += fn_bytes > 0 ? fn_bytes : 1;
+    }
+
+    return fns;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// find_functions_parallel — multi-threaded prologue scanning
+// ─────────────────────────────────────────────────────────────────────────────
+std::vector<Function> Analyzer::find_functions_parallel(
+    const PESection& section,
+    uint64_t         image_base,
+    ThreadPool&      pool,
+    AnalysisProgress* progress
+) const {
+    // Phase 1: Parallel prologue scan - each thread finds candidates in its chunk
+    const auto& data = section.data;
+    const size_t num_threads = pool.size();
+
+    if (progress) {
+        progress->start("Parallel prologue scan", data.size());
+    }
+
+    // Thread-local candidate lists
+    std::vector<std::vector<std::pair<size_t, size_t>>> thread_candidates(num_threads);
+
+    // Each thread scans a chunk and finds prologues
+    pool.parallel_for(size_t(0), data.size(), [&](size_t i) {
+        if (i + 4 >= data.size()) return;
+
+        // Quick prefix check before full prologue test
+        uint8_t b0 = data[i];
+        if (!((b0 == 0x55) || (b0 == 0x53) || (b0 == 0x56) ||
+              (b0 == 0x57) || (b0 == 0x40) || (b0 == 0x48))) {
+            return;
+        }
+
+        if (is_prologue(data.data() + i, data.size() - i)) {
+            // Store: (offset, thread_id)
+            size_t tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % num_threads;
+            thread_candidates[tid].push_back({i, 0});
+        }
+    }, 4096);  // 4KB chunks per thread
+
+    if (progress) {
+        progress->complete();
+    }
+
+    // Phase 2: Merge and sort candidates, deduplicate overlaps
+    std::vector<std::pair<size_t, size_t>> all_candidates;
+    for (auto& tc : thread_candidates) {
+        all_candidates.insert(all_candidates.end(), tc.begin(), tc.end());
+    }
+
+    std::sort(all_candidates.begin(), all_candidates.end());
+
+    // Phase 3: Parallel function measurement
+    // Each candidate is measured in parallel, but we need to handle overlaps
+    // Simple approach: measure all, then resolve overlaps in merge phase
+    struct Candidate {
+        size_t offset;
+        size_t size;
+        uint64_t address;
+    };
+
+    std::vector<Candidate> measured;
+    measured.reserve(all_candidates.size());
+
+    if (progress) {
+        progress->start("Measure functions", all_candidates.size());
+    }
+
+    std::atomic<size_t> measured_count{0};
+    std::mutex measured_mutex;
+
+    // Parallel measurement
+    pool.parallel_for(size_t(0), all_candidates.size(), [&](size_t i) {
+        size_t offset = all_candidates[i].first;
+        size_t max_scan = data.size() - offset;
+        size_t fn_bytes = measure_function(data.data() + offset, max_scan);
+        if (fn_bytes == 0) fn_bytes = 1;
+
+        Candidate c{offset, fn_bytes, image_base + section.vaddr + offset};
+
+        {
+            std::lock_guard<std::mutex> lock(measured_mutex);
+            measured.push_back(c);
+        }
+
+        if (progress && (++measured_count % 64) == 0) {
+            progress->update(measured_count);
+        }
+    }, 1);  // One candidate per work item
+
+    if (progress) {
+        progress->complete();
+    }
+
+    // Phase 4: Resolve overlaps (sequential - must be deterministic)
+    // Sort by address, keep non-overlapping functions
+    std::sort(measured.begin(), measured.end(),
+              [](const Candidate& a, const Candidate& b) { return a.address < b.address; });
+
+    std::vector<Function> fns;
+    fns.reserve(measured.size());
+
+    uint64_t last_end = 0;
+    for (const auto& c : measured) {
+        // Skip if this function overlaps with previous
+        if (c.address < last_end) continue;
+
+        Function fn;
+        fn.start_address = c.address;
+        fn.end_address = c.address + c.size;
+        fn.size_bytes = c.size;
+
+        char buf[32];
+        std::snprintf(buf, sizeof(buf), "%llX", (unsigned long long)c.address);
+        fn.name = "sub_" + std::string(buf);
+
+        fns.push_back(fn);
+        last_end = fn.end_address;
     }
 
     return fns;

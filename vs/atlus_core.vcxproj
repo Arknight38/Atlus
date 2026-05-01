@@ -58,12 +58,15 @@
     <ClCompile Include="..\src\core\formatter.cpp">
       <ObjectFileName>$(IntDir)atlus_formatter.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\src\core\ghidra_decompiler.cpp" />
+    <ClCompile Include="..\src\core\revng_decompiler.cpp" />
+    <ClCompile Include="..\src\core\thread_pool.cpp" />
+    <ClCompile Include="..\src\core\sha256.cpp" />
     <!-- IR Infrastructure -->
     <ClCompile Include="..\src\core\md5.cpp" />
     <ClCompile Include="..\src\core\ir_identity.cpp" />
     <ClCompile Include="..\src\core\ir_governance.cpp" />
     <ClCompile Include="..\src\core\ir.cpp" />
+    <ClCompile Include="..\src\core\ir_serialization.cpp" />
     <ClCompile Include="..\src\core\address_space.cpp" />
     <ClCompile Include="..\src\core\type_system.cpp" />
     <ClCompile Include="..\src\core\invalidation.cpp" />
@@ -71,8 +74,12 @@
     <ClCompile Include="..\src\core\index.cpp" />
     <ClCompile Include="..\src\core\query.cpp" />
     <!-- Phase 3: Analysis Depth -->
+    <ClCompile Include="..\src\core\disassembly_cache.cpp" />
     <ClCompile Include="..\src\core\cfg_builder.cpp" />
-    <ClCompile Include="..\src\core\xref_analysis.cpp" />
+    <ClCompile Include="..\src\core\xref_analyzer.cpp" />
+    <ClCompile Include="..\src\core\string_analyzer.cpp" />
+    <ClCompile Include="..\src\core\switch_analyzer.cpp" />
+    <ClCompile Include="..\src\core\structure_analyzer.cpp" />
     <ClCompile Include="..\src\core\pe_import_export.cpp" />
     <ClCompile Include="..\src\core\patch_engine.cpp" />
     <!-- Phase 4: Interoperability -->

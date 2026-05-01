@@ -2,6 +2,8 @@
 #include "core/analyzer.h"
 #include <algorithm>
 #include <unordered_map>
+#include <thread>
+#include <atomic>
 
 namespace atlus {
 
@@ -146,6 +148,101 @@ std::vector<std::string> DiffEngine::diff_instructions(
 ) {
     // TODO: LCS-based instruction diff
     return {};
+}
+
+// ── Parallel variants (P1 roadmap) ───────────────────────────────────────────
+
+std::vector<ByteDiff> DiffEngine::byte_diff_parallel(
+    const BinaryFile& old_file,
+    const BinaryFile& new_file,
+    ThreadPool& pool,
+    AnalysisProgress* progress
+) {
+    const size_t common = std::min(old_file.size(), new_file.size());
+    if (common == 0) return {};
+
+    // Use thread-local storage for each worker
+    const size_t num_threads = pool.size();
+    std::vector<std::vector<ByteDiff>> thread_diffs(num_threads);
+
+    if (progress) {
+        progress->start("Parallel byte diff", common);
+    }
+
+    std::atomic<size_t> diff_count{0};
+
+    pool.parallel_for(size_t(0), common, [&](size_t i) {
+        if (old_file[i] != new_file[i]) {
+            size_t tid = std::hash<std::thread::id>{}(std::this_thread::get_id()) % num_threads;
+            thread_diffs[tid].push_back({ i, old_file[i], new_file[i] });
+
+            if (progress && (++diff_count % 1024) == 0) {
+                progress->update(i);
+            }
+        }
+    }, 65536);  // 64KB chunks per thread
+
+    // Merge thread-local results (they're already sorted by offset within each chunk)
+    std::vector<ByteDiff> diffs;
+    size_t total = 0;
+    for (const auto& td : thread_diffs) {
+        total += td.size();
+    }
+    diffs.reserve(total);
+
+    for (auto& td : thread_diffs) {
+        diffs.insert(diffs.end(), td.begin(), td.end());
+    }
+
+    // Sort by offset
+    std::sort(diffs.begin(), diffs.end(),
+              [](const ByteDiff& a, const ByteDiff& b) { return a.offset < b.offset; });
+
+    if (progress) {
+        progress->complete();
+    }
+
+    return diffs;
+}
+
+DiffResult DiffEngine::full_diff_parallel(
+    const BinaryFile& old_file,
+    const BinaryFile& new_file,
+    ThreadPool& pool,
+    AnalysisProgress* progress,
+    bool run_section_diff,
+    bool run_function_diff
+) {
+    DiffResult result;
+    result.old_size = old_file.size();
+    result.new_size = new_file.size();
+
+    // Parallel byte diff
+    result.byte_diffs = byte_diff_parallel(old_file, new_file, pool, progress);
+    result.chunks = make_chunks(result.byte_diffs);
+
+    if (progress) {
+        progress->update(result.byte_diffs.size());
+    }
+
+    if (run_section_diff) {
+        if (progress) {
+            progress->start("Section diff", 1);
+        }
+        PEInfo old_pe = PEParser::parse(old_file);
+        PEInfo new_pe = PEParser::parse(new_file);
+        if (old_pe.valid && new_pe.valid)
+            result.section_diffs = section_diff(old_pe, new_pe);
+        if (progress) {
+            progress->complete();
+        }
+    }
+
+    if (run_function_diff) {
+        // TODO: run Analyzer on both PEs then call function_diff()
+    }
+
+    return result;
 }
 
 // ── Full diff ─────────────────────────────────────────────────────────────────

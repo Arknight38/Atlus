@@ -189,65 +189,6 @@ private:
 
 } // namespace x64dbg
 
-// Ghidra integration (we already have decompiler integration, this adds export/import)
-namespace ghidra {
-
-// Ghidra XML program export format
-class GhidraXMLExporter {
-public:
-    std::string generate(const ir::Binary& binary) {
-        std::ostringstream oss;
-        
-        oss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-        oss << "<PROGRAM>\n";
-        
-        // Image base
-        oss << "  <INFO_SOURCE>\n";
-        oss << "    <IMAGE_BASE value=\"0x" << std::hex << binary.image_base() 
-            << std::dec << "\"/>\n";
-        oss << "  </INFO_SOURCE>\n";
-        
-        // Functions
-        oss << "  <FUNCTIONS>\n";
-        for (const auto& fn : binary.functions()) {
-            oss << "    <FUNCTION>\n";
-            oss << "      <ADDRESS>\n";
-            oss << "        <ADDR value=\"0x" << std::hex << fn->start_address.offset 
-                << std::dec << "\"/>\n";
-            oss << "      </ADDRESS>\n";
-            
-            if (fn->has_name()) {
-                const ir::Symbol* sym = binary.get_symbol(fn->symbol);
-                if (sym) {
-                    oss << "      <SYMBOL>" << sym->name << "</SYMBOL>\n";
-                }
-            }
-            
-            oss << "    </FUNCTION>\n";
-        }
-        oss << "  </FUNCTIONS>\n";
-        
-        // Symbols
-        oss << "  <SYMBOL_TABLE>\n";
-        for (const auto& sym : binary.symbols()) {
-            oss << "    <SYMBOL>\n";
-            oss << "      <ADDRESS>\n";
-            oss << "        <ADDR value=\"0x" << std::hex << sym->address.offset 
-                << std::dec << "\"/>\n";
-            oss << "      </ADDRESS>\n";
-            oss << "      <NAME>" << sym->name << "</NAME>\n";
-            oss << "    </SYMBOL>\n";
-        }
-        oss << "  </SYMBOL_TABLE>\n";
-        
-        oss << "</PROGRAM>\n";
-        
-        return oss.str();
-    }
-};
-
-} // namespace ghidra
-
 // JSON API for external tools
 namespace json_api {
 
