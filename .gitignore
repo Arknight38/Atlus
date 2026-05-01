@@ -22,3 +22,16 @@ cmake-build-*/
 compile_commands.json
 _deps/
 .vs/
+
+# Log files
+*.log
+
+# Temporary test files
+test.c
+
+# Third-party dependencies
+third_party/RetDec/
+third_party/lief/
+third_party/revng/
+third_party/rizin/
+third_party/vcpkg/
